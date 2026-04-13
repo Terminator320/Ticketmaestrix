@@ -1,0 +1,365 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Home - ticketmaestrix{% endblock %}
+
+{% block content %}
+
+{# ══════════════════════════════════════════════
+   NAVBAR
+   ══════════════════════════════════════════════ #}
+<nav class="bg-purple-900 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            {# Logo #}
+            <a href="{{ base_path }}/" class="text-white font-bold text-xl tracking-tight">
+                ticketmaestrix
+            </a>
+
+            {# Desktop nav links #}
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="{{ base_path }}/" class="text-white font-medium hover:text-purple-200 transition">
+                    🏠 Home
+                </a>
+                <a href="{{ base_path }}/events" class="text-purple-200 hover:text-white transition">
+                    🎟 Events
+                </a>
+                <a href="{{ base_path }}/map" class="text-purple-200 hover:text-white transition">
+                    📍 Map
+                </a>
+                <a href="{{ base_path }}/profile" class="text-purple-200 hover:text-white transition">
+                    👤 Profile
+                </a>
+            </div>
+
+            {# Mobile hamburger #}
+            <button class="md:hidden text-white" id="mobile-menu-btn" aria-label="Toggle menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        {# Mobile menu (hidden by default) #}
+        <div class="md:hidden hidden pb-4 space-y-2" id="mobile-menu">
+            <a href="{{ base_path }}/" class="block text-white py-2">🏠 Home</a>
+            <a href="{{ base_path }}/events" class="block text-purple-200 py-2">🎟 Events</a>
+            <a href="{{ base_path }}/map" class="block text-purple-200 py-2">📍 Map</a>
+            <a href="{{ base_path }}/profile" class="block text-purple-200 py-2">👤 Profile</a>
+        </div>
+    </div>
+</nav>
+
+{# ══════════════════════════════════════════════
+   HERO SECTION
+   ══════════════════════════════════════════════ #}
+<section class="bg-gradient-to-b from-purple-900 via-purple-800 to-purple-700 text-white py-16 sm:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            Discover Amazing Events Near You
+        </h1>
+        <p class="text-purple-200 text-sm sm:text-base max-w-xl mx-auto mb-8">
+            From concerts to movies, sports to theater – find and book tickets for unforgettable experiences
+        </p>
+
+        {# Search bar #}
+        <form action="{{ base_path }}/events" method="GET" class="max-w-2xl mx-auto mb-10">
+            <div class="flex items-center bg-white rounded-full overflow-hidden shadow-lg">
+                <div class="pl-5 text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Search events, venues, or locations..."
+                    class="flex-1 px-4 py-3 text-gray-800 text-sm focus:outline-none"
+                    autocomplete="off"
+                >
+                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 text-sm font-semibold transition">
+                    Search
+                </button>
+            </div>
+        </form>
+
+        {# Stats row #}
+        <div class="flex justify-center gap-12 sm:gap-16">
+            <div>
+                <span class="text-2xl sm:text-3xl font-bold">{{ stats.live_events ?? '8+' }}</span>
+                <p class="text-purple-200 text-xs mt-1">Live Events</p>
+            </div>
+            <div>
+                <span class="text-2xl sm:text-3xl font-bold">{{ stats.on_sale ?? '4' }}</span>
+                <p class="text-purple-200 text-xs mt-1">On Sale</p>
+            </div>
+            <div>
+                <span class="text-2xl sm:text-3xl font-bold">{{ stats.points_back ?? '10%' }}</span>
+                <p class="text-purple-200 text-xs mt-1">Points Back</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ══════════════════════════════════════════════
+   CATEGORY TABS
+   ══════════════════════════════════════════════ #}
+<section class="border-b border-gray-200 bg-white sticky top-16 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-1 overflow-x-auto py-1 -mb-px scrollbar-hide">
+            {% set categories = ['All', 'Concert', 'Movies', 'Sports', 'Theater', 'Raffle', 'Festival'] %}
+            {% for cat in categories %}
+                <a
+                    href="{{ base_path }}/events{% if cat != 'All' %}?category={{ cat|lower }}{% endif %}"
+                    class="whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition
+                        {{ (active_category ?? 'All') == cat
+                            ? 'border-purple-600 text-purple-700'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                >
+                    {{ cat }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ══════════════════════════════════════════════
+   FEATURED EVENTS
+   ══════════════════════════════════════════════ #}
+<section class="py-10 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            📋 Featured Events
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for event in featured_events %}
+                {% include "partials/event-card.html.twig" with { event: event, show_badge: true } %}
+            {% else %}
+                {# Placeholder cards if no data yet #}
+                {% for i in 1..3 %}
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition">
+                        <div class="relative">
+                            <div class="aspect-video bg-gray-200 animate-pulse"></div>
+                            <span class="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded">SALE</span>
+                            <span class="absolute top-3 right-3 bg-purple-600 text-white text-xs font-semibold px-2 py-0.5 rounded">TICKETS</span>
+                        </div>
+                        <div class="p-4">
+                            <span class="text-xs font-semibold text-purple-600 uppercase tracking-wide">Concert</span>
+                            <h3 class="font-semibold text-gray-900 mt-1">Test Event #{{ i }}</h3>
+                            <p class="text-xs text-gray-500 mt-1">📅 Thu, Apr {{ 10 + i }}, 2026 at 18:00</p>
+                            <p class="text-xs text-gray-500">📍 Example Venue, New York</p>
+                            <p class="text-xs text-gray-500">🎫 400 tickets available</p>
+                            <div class="flex items-center justify-between mt-3">
+                                <div>
+                                    <span class="text-lg font-bold text-gray-900">$25.00</span>
+                                    <span class="text-xs text-gray-400 line-through ml-1">$35.00</span>
+                                </div>
+                                <a href="#" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ══════════════════════════════════════════════
+   TICKETS ON SALE
+   ══════════════════════════════════════════════ #}
+<section class="py-10 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                🎟 Tickets On Sale
+            </h2>
+            <a href="{{ base_path }}/events?on_sale=1" class="text-purple-600 hover:text-purple-700 text-sm font-medium transition">
+                View All →
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for event in on_sale_events %}
+                {% include "partials/event-card.html.twig" with { event: event, show_badge: true } %}
+            {% else %}
+                {# Placeholder cards #}
+                {% set placeholders = [
+                    { title: 'Summer Music Festival 2026', cat: 'Concert', price: '89.99', original: '120.00', badge: 'ON SALE' },
+                    { title: 'Charity Raffle - Win a Tesla', cat: 'Raffle', price: '25.00', original: '35.00', badge: 'TOP SALE' },
+                    { title: 'Hamilton - Broadway Musical', cat: 'Theater', price: '179.99', original: '220.00', badge: 'LIVE SALE' }
+                ] %}
+                {% for item in placeholders %}
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition">
+                        <div class="relative">
+                            <div class="aspect-video bg-gray-200 animate-pulse"></div>
+                            <span class="absolute top-3 left-3 bg-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded">{{ item.badge }}</span>
+                        </div>
+                        <div class="p-4">
+                            <span class="text-xs font-semibold text-purple-600 uppercase tracking-wide">{{ item.cat }}</span>
+                            <h3 class="font-semibold text-gray-900 mt-1">{{ item.title }}</h3>
+                            <p class="text-xs text-gray-500 mt-1">📅 Coming soon</p>
+                            <p class="text-xs text-gray-500">📍 New York</p>
+                            <p class="text-xs text-gray-500">🎫 Tickets available</p>
+                            <div class="flex items-center justify-between mt-3">
+                                <div>
+                                    <span class="text-lg font-bold text-gray-900">${{ item.price }}</span>
+                                    <span class="text-xs text-gray-400 line-through ml-1">${{ item.original }}</span>
+                                </div>
+                                <a href="#" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ══════════════════════════════════════════════
+   FEATURED EVENTS (second section — "star" icon)
+   ══════════════════════════════════════════════ #}
+<section class="py-10 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            ⭐ Featured Events
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for event in starred_events %}
+                {% include "partials/event-card.html.twig" with { event: event, show_badge: true } %}
+            {% else %}
+                {% set placeholders = [
+                    { title: 'Summer Music Festival 2026', cat: 'Concert', price: '89.99', original: '120.00' },
+                    { title: 'The Midnight Chronicles', cat: 'Movies', price: '15.99', original: '20.00' },
+                    { title: 'Charity Raffle - Win a Tesla', cat: 'Raffle', price: '25.00', original: '35.00' }
+                ] %}
+                {% for item in placeholders %}
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition">
+                        <div class="relative">
+                            <div class="aspect-video bg-gray-200 animate-pulse"></div>
+                            {% if item.badge is defined %}
+                                <span class="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded">{{ item.badge }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <span class="text-xs font-semibold text-purple-600 uppercase tracking-wide">{{ item.cat }}</span>
+                            <h3 class="font-semibold text-gray-900 mt-1">{{ item.title }}</h3>
+                            <p class="text-xs text-gray-500 mt-1">📅 Coming soon</p>
+                            <p class="text-xs text-gray-500">📍 New York</p>
+                            <p class="text-xs text-gray-500">🎫 Tickets available</p>
+                            <div class="flex items-center justify-between mt-3">
+                                <div>
+                                    <span class="text-lg font-bold text-gray-900">${{ item.price }}</span>
+                                    <span class="text-xs text-gray-400 line-through ml-1">${{ item.original }}</span>
+                                </div>
+                                <a href="#" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ══════════════════════════════════════════════
+   ALL EVENTS
+   ══════════════════════════════════════════════ #}
+<section class="py-10 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900">All Events</h2>
+            <span class="text-sm text-gray-500">{{ all_events|length ?? '8' }} events found</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for event in all_events %}
+                {% include "partials/event-card.html.twig" with { event: event, show_badge: true } %}
+            {% else %}
+                {# Placeholder grid of 8 events #}
+                {% set placeholders = [
+                    { title: 'Summer Music Festival 2026', cat: 'Concert', color: 'purple', price: '89.99', badge: 'ON SALE' },
+                    { title: 'The Midnight Chronicles', cat: 'Movies', color: 'purple', price: '15.99', badge: null },
+                    { title: 'Charity Raffle - Win a Tesla', cat: 'Raffle', color: 'purple', price: '25.00', badge: 'ON SALE' },
+                    { title: 'NBA Finals Game 5', cat: 'Sports', color: 'blue', price: '299.99', badge: null },
+                    { title: 'Hamilton - Broadway Musical', cat: 'Theater', color: 'pink', price: '179.99', badge: 'ON SALE' },
+                    { title: 'Jazz in the City', cat: 'Concert', color: 'purple', price: '45.00', badge: null },
+                    { title: 'Food & Wine Festival', cat: 'Festival', color: 'green', price: '65.00', badge: null },
+                    { title: 'Comedy Night Live', cat: 'Theater', color: 'pink', price: '35.00', badge: null }
+                ] %}
+                {% for item in placeholders %}
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition">
+                        <div class="relative">
+                            <div class="aspect-video bg-gray-200 animate-pulse"></div>
+                            {% if item.badge %}
+                                <span class="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded">{{ item.badge }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            {# Category badge with color #}
+                            {% set cat_colors = {
+                                'Concert': 'bg-purple-100 text-purple-700',
+                                'Movies': 'bg-indigo-100 text-indigo-700',
+                                'Sports': 'bg-blue-100 text-blue-700',
+                                'Theater': 'bg-pink-100 text-pink-700',
+                                'Raffle': 'bg-amber-100 text-amber-700',
+                                'Festival': 'bg-green-100 text-green-700'
+                            } %}
+                            <span class="inline-block text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded {{ cat_colors[item.cat] ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ item.cat }}
+                            </span>
+                            <h3 class="font-semibold text-gray-900 mt-2">{{ item.title }}</h3>
+                            <p class="text-xs text-gray-500 mt-1">📅 Coming soon</p>
+                            <p class="text-xs text-gray-500">📍 New York</p>
+                            <p class="text-xs text-gray-500">🎫 Tickets available</p>
+                            <div class="flex items-center justify-between mt-3">
+                                <span class="text-lg font-bold text-gray-900">${{ item.price }}</span>
+                                <a href="#" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{# ══════════════════════════════════════════════
+   DISCOVER LOCAL EVENTS CTA
+   ══════════════════════════════════════════════ #}
+<section class="py-16 bg-purple-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-purple-700 rounded-full mb-4">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">Discover Local Events</h2>
+        <p class="text-purple-200 text-sm max-w-md mx-auto mb-6">
+            Use our interactive map to find events happening near you
+        </p>
+        <a href="{{ base_path }}/map" class="inline-block bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm px-8 py-3 rounded-lg transition shadow-lg">
+            Explore Map
+        </a>
+    </div>
+</section>
+
+{# ══════════════════════════════════════════════
+   MOBILE MENU TOGGLE SCRIPT
+   ══════════════════════════════════════════════ #}
+<script>
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', function () {
+        document.getElementById('mobile-menu')?.classList.toggle('hidden');
+    });
+</script>
+
+{% endblock %}

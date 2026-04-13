@@ -1,0 +1,31 @@
+{
+  "name": "ticketmaestrix",
+  "version": "1.0.0",
+  "description": "TicketMaestrix will be a web application that will allow users to purchase tickets for various events such as concerts, raffles, movies, etc.  This platform shall target event attendees and event organizers. Users can create accounts, browse events and manage their purchases, while admins can create and manage events,  control ticket availability, and monitor transactions. Our system prioritizes ease of access, secure transactions and scalability, ensuring an easy and reliable experience for both  admins and clients.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Terminator320/Ticketmaestrix.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Terminator320/Ticketmaestrix/issues"
+  },
+  "homepage": "https://github.com/Terminator320/Ticketmaestrix#readme",
+  "devDependencies": {
+    "tailwindcss": "^4.2.2"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "@tailwindcss/vite": "^4.2.2"
+  }
+}
