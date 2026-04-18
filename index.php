@@ -130,6 +130,41 @@ $app->get('/signup', function ($request, $response) use ($twig, $basePath) {
     return $response;
 });
 
+// Route for login page
+$app->get('/login', function ($request, $response) use ($twig, $basePath) {
+    $html = $twig->render('login.html.twig', [
+        'base_path' => $basePath,
+    ]);
+    $response->getBody()->write($html);
+    return $response;
+});
+
+// Route for forgot password page
+$app->get('/forgotpassword', function ($request, $response) use ($twig, $basePath) {
+    $html = $twig->render('forgot_password_p1.html.twig', [
+        'base_path' => $basePath,
+    ]);
+    $response->getBody()->write($html);
+    return $response;
+});
+
+// Route for verification code page
+$app->get('/verificationcode', function ($request, $response) use ($twig, $basePath) {
+    $html = $twig->render('forgot_password_p2.html.twig', [
+        'base_path' => $basePath,
+    ]);
+    $response->getBody()->write($html);
+    return $response;
+});
+
+// Route for new password page
+$app->get('/newpassword', function ($request, $response) use ($twig, $basePath) {
+    $html = $twig->render('forgot_password_p3.html.twig', [
+        'base_path' => $basePath,
+    ]);
+    $response->getBody()->write($html);
+    return $response;
+});
 
 
 $app->run();
