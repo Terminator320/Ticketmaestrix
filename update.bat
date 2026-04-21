@@ -3,3 +3,4 @@
 ..\composer require gabordemooij/redbean
 ..\composer require twig/twig
 ..\composer update
+..\composer require vlucas/phpdotenv

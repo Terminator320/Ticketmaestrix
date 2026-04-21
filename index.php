@@ -17,11 +17,16 @@ use App\Middleware\SecurityHeadersMiddleware;
 
 require __DIR__ . '/vendor/autoload.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
 // ============== DATABASE ============== 
 //   Connect RedBeanPHP to your MariaDB/MySQL database.
-//   R::freeze(true) = use existing schema only (no auto-creation).
-R::setup('mysql:host=localhost;dbname=ticketmaestrix', 'root', '');
+R::setup(
+    'mysql:host=' . $_ENV['DB_SERVER'] . ';port=' . ($_ENV['DB_PORT'] ?? '3306') . ';dbname=' . $_ENV['DB_NAME'] . ';charset=utf8mb4',
+    $_ENV['DB_USERNAME'],
+    $_ENV['DB_PASSWORD']
+);
 R::freeze(true);
 
 
