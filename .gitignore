@@ -5,3 +5,6 @@ vendor/
 composer.phar
 
 # Runtime data
+
+#Node modules
+node_modules/
