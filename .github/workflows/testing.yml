@@ -1,12 +1,111 @@
-name: Learning how to use action
+name: Database Check
 
-on: [push]
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Deploy to cPanel
+    types:
+      - completed
 
 jobs:
-  build:
+  check:
+    name: Check cPanel database connection
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Run a one-line script
-      run: echo Hello, world!
+      - name: Run database check on cPanel
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USERNAME }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          port: ${{ secrets.CPANEL_SSH_PORT }}
+          script_stop: true
+          command_timeout: 1m
+          script: |
+            set -e
+
+            APP_DIR="$HOME/public_html"
+
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Missing app directory: $APP_DIR"
+              exit 1
+            fi
+
+            cd "$APP_DIR"
+
+            if [ ! -f ".env" ]; then
+              echo "Missing .env in $APP_DIR"
+              exit 1
+            fi
+
+            if [ ! -f "vendor/autoload.php" ]; then
+              echo "Missing vendor/autoload.php. Run composer install on the server."
+              exit 1
+            fi
+
+            PHP_BIN="$(command -v php || true)"
+
+            if [ -z "$PHP_BIN" ] && [ -x "/usr/local/bin/php" ]; then
+              PHP_BIN="/usr/local/bin/php"
+            fi
+
+            if [ -z "$PHP_BIN" ]; then
+              PHP_BIN="$(ls -1 /opt/cpanel/ea-php*/root/usr/bin/php 2>/dev/null | tail -n 1 || true)"
+            fi
+
+            if [ -z "$PHP_BIN" ]; then
+              echo "PHP was not found on the cPanel account."
+              exit 1
+            fi
+
+            "$PHP_BIN" <<'PHP'
+            <?php
+            declare(strict_types=1);
+
+            $baseDir = getcwd();
+
+            require $baseDir . '/vendor/autoload.php';
+
+            Dotenv\Dotenv::createImmutable($baseDir)->load();
+
+            $host = $_ENV['DB_SERVER'] ?? '';
+            $port = $_ENV['DB_PORT'] ?? '3306';
+            $user = $_ENV['DB_USERNAME'] ?? '';
+            $pass = $_ENV['DB_PASSWORD'] ?? '';
+            $db   = $_ENV['DB_NAME'] ?? '';
+
+            foreach (['DB_SERVER' => $host, 'DB_USERNAME' => $user, 'DB_NAME' => $db] as $name => $value) {
+                if ($value === '') {
+                    fwrite(STDERR, "Missing {$name} in .env\n");
+                    exit(1);
+                }
+            }
+
+            try {
+                $pdo = new PDO(
+                    "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4",
+                    $user,
+                    $pass,
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_TIMEOUT => 5,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    ]
+                );
+
+                $row = $pdo->query('SELECT VERSION() AS version, DATABASE() AS db')->fetch();
+
+                echo "Database connection OK\n";
+                echo "Host: {$host}:{$port}\n";
+                echo "Database: {$row['db']}\n";
+                echo "Server: {$row['version']}\n";
+            } catch (Throwable $e) {
+                fwrite(STDERR, "Database connection failed\n");
+                fwrite(STDERR, $e->getMessage() . "\n");
+                fwrite(STDERR, "Code: " . $e->getCode() . "\n");
+                exit(1);
+            }
+            PHP
