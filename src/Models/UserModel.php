@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use RedBeanPHP\R;
+use App\Helpers\BeanHelper;
 
 class UserModel
 {
@@ -23,16 +24,15 @@ class UserModel
         return R::findOne('users', 'email = ?', [$email]);
     }
 
-    public function create(string $firstName, string $lastName, string $email,
-                           string $password, string $phoneNumber, string $role = 'user'): void
+    public function create(array $data): void
     {
         $bean = R::dispense('users');
-        $bean->first_name   = $firstName;
-        $bean->last_name    = $lastName;
-        $bean->email        = $email;
-        $bean->password     = password_hash($password, PASSWORD_DEFAULT);
-        $bean->phone_number = $phoneNumber;
-        $bean->role         = $role;
+        $bean->first_name   = $data['first_name'];
+        $bean->last_name    = $data['last_name'];
+        $bean->email        = $data['email'];
+        $bean->password     = password_hash($data['password'], PASSWORD_DEFAULT);
+        $bean->phone_number = $data['phone_number'];
+        $bean->role         = $data['role'] ?? 'user';
         R::store($bean);
     }
 
@@ -44,5 +44,17 @@ class UserModel
     public function delete(mixed $bean): void
     {
         R::trash($bean);
+    }
+
+    public function update(int $id, array $data): ?\RedBeanPHP\OODBBean
+    {
+        $user = R::load('users', $id);
+        if (!BeanHelper::isValidBean($user)) {
+            return null;
+        }
+
+        
+
+        return BeanHelper::castBeanProperties($user);
     }
 }

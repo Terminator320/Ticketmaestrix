@@ -12,21 +12,16 @@ class UserController {
         private Environment $twig,
         private UserModel $userModel,
         private string $basePath,
-    ) {}
+    ) {
+        $this->twig = $twig;
+        $this->userModel = $userModel;
+        $this->basePath = $basePath;
+    }
 
      public function store(Request $request, Response $response): Response {
-        $data = (array) $request->getParsedBody();
-        $user = trim($data['user'] ?? '');
+       $data = $request->getParsedBody();
 
-        if ($user !== '') {
-            $this->userModel->create(
-                $user['first_name'],
-                $user['last_name'],
-                $user['email'],
-                $user['password'],
-                $user['phone_number']
-            );
-        }
+       $this->userModel->create($data);
 
         return $response
             ->withHeader('Location', $this->basePath . '/users')
@@ -46,26 +41,11 @@ class UserController {
             ->withStatus(302);
      }
 
-     public function update(Request $request, Response $response): Response {
-        $user = $this->userModel->load((int)$request->getAttribute('id') ?? 0);
+     public function update(Request $request, Response $response, array $args): Response {
+        $id = (int)$args['id'];
+        $data = $request->getParsedBody();
 
-        if ($user->id) {
-            $data = (array) $request->getParsedBody();
-            $userData = trim($data['user'] ?? '');
-
-            if ($userData !== '') {
-                $user->first_name = $userData['first_name'];
-                $user->last_name = $userData['last_name'];
-                $user->email = $userData['email'];
-                $user->phone_number = $userData['phone_number'];
-
-                if (!empty($userData['password'])) {
-                    $user->password = password_hash($userData['password'], PASSWORD_DEFAULT);
-                }
-
-                $this->userModel->save($user);
-            }
-        }
+        $this->userModel->update($id, $data);
 
         return $response
             ->withHeader('Location', $this->basePath . '/users')
