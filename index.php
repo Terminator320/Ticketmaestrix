@@ -140,6 +140,10 @@ $app->get('/login',            [AuthController::class, 'showLogin']);
 $app->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
 $app->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
 $app->get('/newpassword',      [AuthController::class, 'showNewPassword']);
-
+$app->get('/cart',             [HomeController::class, 'showCart']);
+$app->get('/profile',          [UserController::class, 'showProfile']);
+$app->get('/editprofile',      [UserController::class, 'editProfile']);
+$app->get('/map',              [HomeController::class, 'showMap']);
+$app->get('/admin',            [AdminController::class, 'showAdminDashboard']);
 
 $app->run();

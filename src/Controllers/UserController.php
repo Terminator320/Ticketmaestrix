@@ -101,4 +101,45 @@ class UserController {
         $response->getBody()->write($html);
         return $response;
      }
+
+     public function showProfile(Request $request, Response $response): Response {
+        $user = $this->userModel->load((int)$request->getAttribute('id') ?? 0);
+
+        if (!$user->id) {
+            return $response
+                ->withHeader('Location', $this->basePath . '/users')
+                ->withStatus(302);
+        }
+
+        $html = $this->twig->render('profile.html.twig', [
+            'user' => $user,
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+     }
+
+     public function showProfile($request, $response) {
+    return $this->twig->render($response, 'profile.html.twig', [
+        'current_route' => 'profile'
+    ]);
+    }
+
+    public function editProfile(Request $request, Response $response): Response {
+    $id = (int)$request->getAttribute('id') ?? 0;
+    $user = $this->userModel->load($id);
+
+    if (!$user || !$user->id) {
+        return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
+    }
+
+    $html = $this->twig->render('edit_profile.html.twig', [
+        'user' => $user,
+        'current_route' => 'profile',
+        'base_path' => $this->basePath
+    ]);
+
+    $response->getBody()->write($html);
+    return $response;
+    }
 }
