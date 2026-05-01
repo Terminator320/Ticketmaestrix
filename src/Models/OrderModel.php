@@ -38,4 +38,54 @@ class OrderModel
     {
         R::trash($bean);
     }
+
+    /**
+     * All orders, newest first. Used by the admin events tab indirectly
+     * and any future admin-orders listing.
+     */
+    public function findAll(): array
+    {
+        return BeanHelper::castBeanArray(
+            R::findAll('orders', 'ORDER BY order_time DESC')
+        );
+    }
+
+    /**
+     * Site-wide revenue from paid orders only (status > 0). Drives the
+     * "Total Revenue" admin card.
+     */
+    public function getTotalRevenue(): float
+    {
+        return (float) R::getCell(
+            'SELECT COALESCE(SUM(total_price), 0) FROM orders WHERE status > 0'
+        );
+    }
+
+    /**
+     * Total dollars one user has spent on paid orders. Drives the
+     * "Total Spent" stat on the profile page.
+     */
+    public function totalSpentByUser(int $userId): float
+    {
+        return (float) R::getCell(
+            'SELECT COALESCE(SUM(total_price), 0)
+               FROM orders
+              WHERE user_id = ? AND status > 0',
+            [$userId]
+        );
+    }
+
+    /**
+     * Number of distinct events the user has tickets for, via paid orders.
+     * Powers the "Events Attended" stat on the profile page.
+     */
+    public function eventsAttendedByUser(int $userId): int
+    {
+        $sql = 'SELECT COUNT(DISTINCT t.event_id)
+                  FROM order_items oi
+                  JOIN orders o  ON o.id = oi.order_id
+                  JOIN ticket t  ON t.id = oi.ticket_id
+                 WHERE o.user_id = ? AND o.status > 0';
+        return (int) R::getCell($sql, [$userId]);
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Helpers\Auth;
 use App\Models\EventModel;
 use App\Models\TicketModel;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -31,6 +32,9 @@ class TicketController
 
     public function create(Request $request, Response $response): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $html = $this->twig->render('ticket/create.html.twig', [
             'base_path' => $this->basePath,
             'events'    => $this->eventModel->getAll(),
@@ -41,6 +45,9 @@ class TicketController
 
     public function store(Request $request, Response $response): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $data = $request->getParsedBody();
         $this->ticketModel->create(
             (float) ($data['price'] ?? 0),
@@ -53,6 +60,9 @@ class TicketController
 
     public function edit(Request $request, Response $response, array $args): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $ticket = $this->ticketModel->getById((int) $args['id']);
 
         if (!$ticket) {
@@ -70,6 +80,9 @@ class TicketController
 
     public function update(Request $request, Response $response, array $args): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $id     = (int) $args['id'];
         $data   = $request->getParsedBody();
         $ticket = $this->ticketModel->load($id);
@@ -87,6 +100,9 @@ class TicketController
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $ticket = $this->ticketModel->load((int) $args['id']);
         if ($ticket->id) {
             $this->ticketModel->delete($ticket);

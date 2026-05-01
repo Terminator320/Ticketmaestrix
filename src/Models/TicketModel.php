@@ -49,4 +49,31 @@ class TicketModel
     {
         R::trash($bean);
     }
+
+    /**
+     * Cheapest ticket for an event, or null if none exist yet. Used by
+     * EventModel::hydrate to populate min_price on listing cards.
+     */
+    public function minPriceForEvent(int $eventId): ?float
+    {
+        $value = R::getCell(
+            'SELECT MIN(price) FROM ticket WHERE event_id = ?',
+            [$eventId]
+        );
+        return $value === null ? null : (float) $value;
+    }
+
+    /**
+     * Count of tickets a user has actually purchased — sums quantity from
+     * order_items joined to that user's paid orders. Powers the "Tickets
+     * Purchased" stat on the profile page.
+     */
+    public function countByOrderItemsForUser(int $userId): int
+    {
+        $sql = 'SELECT COALESCE(SUM(oi.quantity), 0)
+                  FROM order_items oi
+                  JOIN orders o ON o.id = oi.order_id
+                 WHERE o.user_id = ? AND o.status > 0';
+        return (int) R::getCell($sql, [$userId]);
+    }
 }

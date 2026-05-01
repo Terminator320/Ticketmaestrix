@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Helpers\Auth;
 use App\Models\CategoryModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -29,6 +30,9 @@ class CategoryController
 
     public function create(Request $request, Response $response): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $html = $this->twig->render('category/create.html.twig', [
             'base_path' => $this->basePath,
         ]);
@@ -38,6 +42,9 @@ class CategoryController
 
     public function store(Request $request, Response $response): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $data = $request->getParsedBody();
         $this->categoryModel->create((string) ($data['name'] ?? ''));
         return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
@@ -45,6 +52,9 @@ class CategoryController
 
     public function edit(Request $request, Response $response, array $args): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $category = $this->categoryModel->getById((int) $args['id']);
 
         if (!$category) {
@@ -61,6 +71,9 @@ class CategoryController
 
     public function update(Request $request, Response $response, array $args): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $id       = (int) $args['id'];
         $data     = $request->getParsedBody();
         $category = $this->categoryModel->load($id);
@@ -75,6 +88,9 @@ class CategoryController
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $category = $this->categoryModel->load((int) $args['id']);
         if ($category->id) {
             $this->categoryModel->delete($category);

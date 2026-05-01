@@ -37,4 +37,17 @@ class OrderItemModel
     {
         R::trash($bean);
     }
+
+    /**
+     * Total tickets sold across all paid orders. Drives the
+     * "Tickets Sold" admin stat card.
+     */
+    public function totalQuantitySold(): int
+    {
+        $sql = 'SELECT COALESCE(SUM(oi.quantity), 0)
+                  FROM order_items oi
+                  JOIN orders o ON o.id = oi.order_id
+                 WHERE o.status > 0';
+        return (int) R::getCell($sql);
+    }
 }

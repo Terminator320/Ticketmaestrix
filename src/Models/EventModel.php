@@ -57,4 +57,54 @@ class EventModel
     {
         R::trash($bean);
     }
+
+    /**
+     * All future-or-now events ordered by date.
+     *
+     * Used by the home page "All Events" grid and the map sidebar.
+     */
+    public function getUpcoming(): array
+    {
+        return BeanHelper::castBeanArray(
+            R::find('events', 'date >= NOW() ORDER BY date ASC')
+        );
+    }
+
+    /**
+     * The next $limit upcoming events. Powers the "Tickets On Sale"
+     * featured row on the home page.
+     */
+    public function getUpcomingFeatured(int $limit = 3): array
+    {
+        return BeanHelper::castBeanArray(
+            R::find('events', 'date >= NOW() ORDER BY date ASC LIMIT ?', [$limit])
+        );
+    }
+
+    /**
+     * Count of events whose date is today or later. Drives the
+     * "Live Events" hero stat and the admin "Active Events" card.
+     */
+    public function countActive(): int
+    {
+        return (int) R::getCell('SELECT COUNT(*) FROM events WHERE date >= NOW()');
+    }
+
+    /**
+     * Decorate event beans with venue_name, venue_address, and min_price
+     * so listing templates have everything they need without per-row
+     * lookups in Twig. Returns a new array; does not mutate the input.
+     */
+    public function hydrate(array $events, VenueModel $venues, TicketModel $tickets): array
+    {
+        $out = [];
+        foreach ($events as $event) {
+            $venue = $venues->getById((int) ($event->venue_id ?? 0));
+            $event->venue_name    = $venue ? (string) $venue->name : '';
+            $event->venue_address = $venue ? (string) $venue->address : '';
+            $event->min_price     = $tickets->minPriceForEvent((int) $event->id);
+            $out[] = $event;
+        }
+        return $out;
+    }
 }

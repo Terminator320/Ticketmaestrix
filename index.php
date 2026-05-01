@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
+use App\Controllers\CartController;
 use App\Controllers\CategoryController;
 use App\Controllers\EventController;
 use App\Controllers\HomeController;
@@ -81,6 +82,21 @@ $container->set(Environment::class, $twig);
 
 $container->set(HomeController::class, fn() => new HomeController(
     $twig,
+    new EventModel(),
+    new CategoryModel(),
+    new TicketModel(),
+    new VenueModel(),
+    new OrderItemModel(),
+    $basePath,
+));
+
+$container->set(CartController::class, fn() => new CartController(
+    $twig,
+    new TicketModel(),
+    new EventModel(),
+    new VenueModel(),
+    new OrderModel(),
+    new OrderItemModel(),
     $basePath,
 ));
 
@@ -93,12 +109,20 @@ $container->set(AuthController::class, fn() => new AuthController(
 $container->set(UserController::class, fn() => new UserController(
     $twig,
     new UserModel(),
+    new TicketModel(),
+    new OrderModel(),
     $basePath,
 ));
 
 $container->set(AdminController::class, fn() => new AdminController(
     $twig,
     new UserModel(),
+    new EventModel(),
+    new OrderModel(),
+    new OrderItemModel(),
+    new CategoryModel(),
+    new VenueModel(),
+    new TicketModel(),
     $basePath,
 ));
 
@@ -211,6 +235,7 @@ $app->get('/admin', [AdminController::class, 'showAdminDashboard']);
 
 // --- Users ---
 $app->group('/users', function ($group) {
+    $group->get('',               [UserController::class, 'index']);
     $group->post('',              [UserController::class, 'store']);
     $group->get('/{id}',         [UserController::class, 'viewDetails']);
     $group->post('/{id}',        [UserController::class, 'update']);
@@ -219,6 +244,7 @@ $app->group('/users', function ($group) {
 });
 $app->get('/profile',    [UserController::class, 'showProfile']);
 $app->get('/editprofile',[UserController::class, 'editProfile']);
+$app->post('/editprofile',[UserController::class, 'updateProfile']);
 
 // --- Categories ---
 $app->group('/categories', function ($group) {
@@ -282,6 +308,14 @@ $app->group('/order-items', function ($group) {
     $group->get('/{id}',         [OrderItemController::class, 'viewDetails']);
     $group->post('/{id}',        [OrderItemController::class, 'update']);
     $group->post('/{id}/delete', [OrderItemController::class, 'delete']);
+});
+
+// --- Cart ---
+$app->group('/cart', function ($group) {
+    $group->post('/add',                  [CartController::class, 'add']);
+    $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
+    $group->post('/clear',                [CartController::class, 'clear']);
+    $group->post('/checkout',             [CartController::class, 'checkout']);
 });
 
 

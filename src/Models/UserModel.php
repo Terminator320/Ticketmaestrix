@@ -77,4 +77,15 @@ class UserModel
         R::store($user);
         return BeanHelper::castBeanProperties($user);
     }
+
+    /**
+     * Number of non-admin users in the system. Drives the
+     * "Total Customers" admin stat card.
+     */
+    public function customerCount(): int
+    {
+        return (int) R::getCell(
+            "SELECT COUNT(*) FROM users WHERE role = 'user'"
+        );
+    }
 }
