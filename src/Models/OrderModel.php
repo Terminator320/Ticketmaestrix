@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Helpers\BeanHelper;
 use RedBeanPHP\R;
 
 class OrderModel
 {
     public function findByUser(int $userId): array
     {
-        return R::find('orders', 'user_id = ? ORDER BY order_time DESC', [$userId]);
+        return BeanHelper::castBeanArray(R::find('orders', 'user_id = ? ORDER BY order_time DESC', [$userId]));
     }
 
     public function load(int $id): mixed
     {
-        return R::load('orders', $id);
+        return BeanHelper::castBeanProperties(R::load('orders', $id));
     }
 
     public function create(float $totalPrice, int $userId): void

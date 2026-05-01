@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use RedBeanPHP\R;
+use App\Helpers\BeanHelper;
 
 class UserModel
 {
     public function findAll(): array
     {
-        return R::findAll('users');
+        return BeanHelper::castBeanArray(R::findAll('users'));
     }
 
     public function load(int $id): mixed
@@ -23,17 +24,17 @@ class UserModel
         return R::findOne('users', 'email = ?', [$email]);
     }
 
-    public function create(string $firstName, string $lastName, string $email,
-                           string $password, string $phoneNumber, string $role = 'user'): void
+    public function create(array $data): \RedBeanPHP\OODBBean
     {
         $bean = R::dispense('users');
-        $bean->first_name   = $firstName;
-        $bean->last_name    = $lastName;
-        $bean->email        = $email;
-        $bean->password     = password_hash($password, PASSWORD_DEFAULT);
-        $bean->phone_number = $phoneNumber;
-        $bean->role         = $role;
+        $bean->first_name   = $data['first_name'];
+        $bean->last_name    = $data['last_name'];
+        $bean->email        = $data['email'];
+        $bean->password     = password_hash($data['password'], PASSWORD_DEFAULT);
+        $bean->phone_number = $data['phone_number'];
+        $bean->role         = $data['role'] ?? 'user';
         R::store($bean);
+        return BeanHelper::castBeanProperties($bean);
     }
 
     public function save(mixed $bean): void
@@ -44,5 +45,17 @@ class UserModel
     public function delete(mixed $bean): void
     {
         R::trash($bean);
+    }
+
+    public function update(int $id, array $data): ?\RedBeanPHP\OODBBean
+    {
+        $user = R::load('users', $id);
+        if (!BeanHelper::isValidBean($user)) {
+            return null;
+        }
+
+        
+
+        return BeanHelper::castBeanProperties($user);
     }
 }

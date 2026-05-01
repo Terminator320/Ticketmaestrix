@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Helpers\BeanHelper;
 use RedBeanPHP\R;
 
 class EventModel
 {
     public function findAll(): array
     {
-        return R::findAll('events', 'ORDER BY date ASC');
+        return BeanHelper::castBeanArray(R::findAll('events', 'ORDER BY date ASC'));
     }
 
     public function load(int $id): mixed
     {
-        return R::load('events', $id);
+        return BeanHelper::castBeanProperties(R::load('events', $id));
     }
 
     public function findByCategory(int $categoryId): array
     {
-        return R::find('events', 'category_id = ? ORDER BY date ASC', [$categoryId]);
+        return BeanHelper::castBeanArray(R::find('events', 'category_id = ? ORDER BY date ASC', [$categoryId]));
     }
 
     public function create(string $title, string $description, string $date,

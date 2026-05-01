@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Helpers\BeanHelper;
 use RedBeanPHP\R;
 
 class CategoryModel
 {
     public function findAll(): array
     {
-        return R::findAll('categories', 'ORDER BY name ASC');
+        return BeanHelper::castBeanArray(R::findAll('categories', 'ORDER BY name ASC'));
     }
 
     public function load(int $id): mixed
     {
-        return R::load('categories', $id);
+        return BeanHelper::castBeanProperties(R::load('categories', $id));
     }
 
     public function create(string $name): void
