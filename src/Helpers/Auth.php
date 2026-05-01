@@ -23,6 +23,11 @@ class Auth
     /** Mark a user as logged in by storing their id in the session. */
     public static function login(int $userId): void
     {
+        // Regenerate the session id on login to prevent session fixation
+        // — without this, an id that was set before authentication would
+        // remain valid after, letting an attacker hijack a fresh session.
+        session_regenerate_id(true);
+
         $_SESSION['user_id'] = $userId;
         self::$cachedUser = null; // force reload on next user() call
     }
@@ -33,15 +38,16 @@ class Auth
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                '',
-                time() - 42000,
-                $params['path'],
-                $params['domain'],
-                $params['secure'],
-                $params['httponly']
-            );
+            // Use the options-array form so the samesite attribute survives the
+            // expiry write — the legacy positional form silently drops it.
+            setcookie(session_name(), '', [
+                'expires'  => time() - 42000,
+                'path'     => $params['path'],
+                'domain'   => $params['domain'],
+                'secure'   => $params['secure'],
+                'httponly' => $params['httponly'],
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
         }
         session_destroy();
         self::$cachedUser = null;
@@ -69,7 +75,7 @@ class Auth
         }
 
         $bean = R::load('users', $id);
-        if (!isset($bean->id) || (int) $bean->id <= 0) {
+        if (!BeanHelper::isValidBean($bean)) {
             return null; // session pointed at a deleted user
         }
 
