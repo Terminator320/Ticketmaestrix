@@ -6,4 +6,4 @@ deployment:
     - find $HOME/public_html -not -path "$HOME/public_html/var*" -type f -exec chmod 644 {} \;
     - find $HOME/public_html -not -path "$HOME/public_html/var*" -type d -exec chmod 755 {} \;
     - mkdir -p $HOME/public_html/var && chmod 700 $HOME/public_html/var
-    - cd $HOME/public_html && composer install --no-dev --optimize-autoloader --no-interaction
+    - cd $HOME/public_html && /opt/cpanel/ea-php81/root/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction

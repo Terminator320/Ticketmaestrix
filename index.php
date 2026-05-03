@@ -214,8 +214,8 @@ $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($l
 };
 
 $app->add(new MaintenanceMiddleware(
-    flagFile:        __DIR__ . '/var/maintenance.flag',
-    responseFactory: $app->getResponseFactory()
+    __DIR__ . '/var/maintenance.flag',
+    $app->getResponseFactory()
 ));
 
 $app->add(new SecurityHeadersMiddleware());
