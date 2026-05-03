@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tickets - TicketMaestrix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root { --brand-purple: #5E246E; }
+        body { background-color: #F8F9FA; }
+        .ticket-row { border-left: 4px solid var(--brand-purple); }
+    </style>
+</head>
+<body>
+    {% include 'partials/navbar.html.twig' %}
+
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="{{ base_path }}/events/{{ event_id }}" class="text-decoration-none text-muted small">
+                    <i class="bi bi-arrow-left"></i> Back to Event
+                </a>
+                <h4 class="fw-bold mb-0 mt-2">
+                    <i class="bi bi-ticket-perforated me-2" style="color:var(--brand-purple)"></i>
+                    Available Tickets
+                </h4>
+            </div>
+            <span class="text-muted small">{{ tickets|length }} ticket(s)</span>
+        </div>
+
+        {% if tickets is empty %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-ticket-perforated display-4 d-block mb-3"></i>
+            No tickets available for this event.
+        </div>
+        {% else %}
+        <div class="row g-3">
+            {% for ticket in tickets %}
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 p-3 ticket-row">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">Row {{ ticket.row }} — Seat {{ ticket.seat }}</div>
+                            <small class="text-muted">Ticket #{{ ticket.id }}</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold" style="color:var(--brand-purple)">${{ ticket.price }}</span>
+                            <a href="{{ base_path }}/tickets/{{ ticket.id }}" class="btn btn-sm btn-outline-secondary">
+                                View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

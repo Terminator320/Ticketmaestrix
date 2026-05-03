@@ -1,0 +1,170 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Helpers\Auth;
+use App\Models\CategoryModel;
+use App\Models\EventModel;
+use App\Models\OrderItemModel;
+use App\Models\OrderModel;
+use App\Models\TicketModel;
+use App\Models\UserModel;
+use App\Models\VenueModel;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Twig\Environment;
+
+/**
+ * Admin landing page. Aggregates site-wide stats, lists all events,
+ * and manages administrative users.
+ */
+class AdminController
+{
+    public function __construct(
+        private Environment     $twig,
+        private UserModel       $userModel,
+        private EventModel      $eventModel,
+        private OrderModel      $orderModel,
+        private OrderItemModel  $orderItemModel,
+        private CategoryModel   $categoryModel,
+        private VenueModel      $venueModel,
+        private TicketModel     $ticketModel,
+        private string          $basePath,
+    ) {}
+
+    /**
+     * GET /admin — The main dashboard
+     * Displays stats, events, and the admin management list.
+     */
+    public function showAdminDashboard(Request $request, Response $response): Response
+    {
+        // Hard guard: non-admins get bounced.
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        // 1. Aggregate site-wide stats
+        $stats = [
+            'revenue'       => $this->orderModel->getTotalRevenue(),
+            'tickets_sold'  => $this->orderItemModel->totalQuantitySold(),
+            'active_events' => $this->eventModel->countActive(),
+            'customers'     => $this->userModel->customerCount(),
+        ];
+
+        // 2. Fetch and hydrate events for the "My Events" tab
+        $events = $this->eventModel->hydrate(
+            $this->eventModel->getAll(),
+            $this->venueModel,
+            $this->ticketModel
+        );
+
+        // 3. Fetch all admins for the "Manage Admins" tab
+        $admins = $this->userModel->getAllAdmins();
+
+        $html = $this->twig->render('admin/admin_dashboard.html.twig', [
+            'base_path'     => $this->basePath,
+            'current_route' => 'admin',
+            'admin_user'    => Auth::user(),
+            'stats'         => $stats,
+            'events'        => $events,
+            'admins'        => $admins,
+            'categories'    => $this->categoryModel->getAll(),
+            'venues'        => $this->venueModel->getAll(),
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    public function createAdmin(Request $request, Response $response): Response
+{
+    if (!Auth::isAdmin()) {
+        $response->getBody()->write(json_encode(['success' => false, 'message' => 'Unauthorized']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+    }
+
+    $data = $request->getParsedBody();
+    
+    $this->userModel->create([
+        'first_name'   => $data['first_name'],
+        'last_name'    => $data['last_name'],
+        'email'        => $data['email'],
+        'password'     => $data['password'],
+        'role'         => 'admin' 
+    ]);
+
+    $response->getBody()->write(json_encode(['success' => true]));
+    return $response->withHeader('Content-Type', 'application/json');
+}
+
+    /**
+     * GET /admin/users/{id}/edit — Show edit form for a specific admin
+     */
+    public function editAdmin(Request $request, Response $response, array $args): Response
+    {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        $adminId = (int)$args['id'];
+        $userToEdit = $this->userModel->findById($adminId);
+
+        if (!$userToEdit) {
+            return $response->withHeader('Location', $this->basePath . '/admin?error=not_found')->withStatus(302);
+        }
+
+        $html = $this->twig->render('admin/users/edit.html.twig', [
+            'base_path'     => $this->basePath,
+            'current_route' => 'admin_users',
+            'admin_user'    => Auth::user(),
+            'user'          => $userToEdit,
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    /**
+     * POST /admin/users/{id}/update — Process the admin update
+     */
+    public function updateAdmin(Request $request, Response $response, array $args): Response
+    {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        $adminId = (int)$args['id'];
+        $data = $request->getParsedBody();
+
+        $updateData = [
+            'first_name'   => $data['first_name'],
+            'last_name'    => $data['last_name'],
+            'email'        => $data['email'],
+            'phone_number' => $data['phone_number'] ?? '',
+        ];
+
+        // Only update password if a new one was provided
+        if (!empty($data['password'])) {
+            $updateData['password'] = $data['password'];
+        }
+
+        $this->userModel->update($adminId, $updateData);
+
+        return $response->withHeader('Location', $this->basePath . '/admin?success=updated')->withStatus(302);
+    }
+
+    public function deleteAdmin(Request $request, Response $response, array $args): Response
+{
+    if (!Auth::isAdmin() || (int)$args['id'] === Auth::user()->id) {
+        $response->getBody()->write(json_encode(['success' => false]));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+    }
+
+    $this->userModel->delete((int)$args['id']);
+
+    $response->getBody()->write(json_encode(['success' => true]));
+    return $response->withHeader('Content-Type', 'application/json');
+}
+}

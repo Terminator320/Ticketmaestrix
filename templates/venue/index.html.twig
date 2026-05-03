@@ -1,0 +1,35 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Venues - TicketMaestrix{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Venues</h2>
+    <a href="{{ base_path }}/venues/create" class="btn btn-primary">Add New Venue</a>
+</div>
+
+<div class="grid">
+    {% for venue in venues %}
+    <div class="card" data-name="{{ venue.name|e('html_attr') }}">
+        <div class="card-header">
+            <h3>{{ venue.name|e('html') }}</h3>
+            <span class="sport-badge">{{ venue.capacity }} cap.</span>
+        </div>
+        <div class="card-body">
+            <p><strong>Address:</strong> {{ venue.address|e('html') }}</p>
+            <p><strong>Description:</strong> {{ venue.description|e('html') }}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{{ base_path }}/venues/{{ venue.id }}/edit" class="btn btn-secondary">Edit</a>
+            <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this venue?')">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No venues found. <a href="{{ base_path }}/venues/create">Add the first venue</a>.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

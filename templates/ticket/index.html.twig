@@ -1,0 +1,34 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Tickets - TicketMaestrix{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Tickets</h2>
+    <a href="{{ base_path }}/tickets/create" class="btn btn-primary">Add New Ticket</a>
+</div>
+
+<div class="grid">
+    {% for ticket in tickets %}
+    <div class="card">
+        <div class="card-header">
+            <h3>Row {{ ticket.row }} — Seat {{ ticket.seat }}</h3>
+            <span class="sport-badge">${{ ticket.price }}</span>
+        </div>
+        <div class="card-body">
+            <p><strong>Event ID:</strong> {{ ticket.event_id }}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{{ base_path }}/tickets/{{ ticket.id }}/edit" class="btn btn-secondary">Edit</a>
+            <form action="{{ base_path }}/tickets/{{ ticket.id }}/delete" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this ticket?')">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No tickets found. <a href="{{ base_path }}/tickets/create">Add the first ticket</a>.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

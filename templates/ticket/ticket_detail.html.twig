@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket #{{ ticket.id }} - TicketMaestrix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root { --brand-purple: #5E246E; }
+        body { background-color: #F8F9FA; }
+        .ticket-card {
+            border: 2px dashed #dee2e6;
+            border-radius: 16px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .ticket-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 8px;
+            background: var(--brand-purple);
+            border-radius: 16px 0 0 16px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'partials/navbar.html.twig' %}
+
+    <div class="container py-5" style="max-width: 600px;">
+        <a href="{{ base_path }}/events/{{ ticket.event_id }}" class="text-decoration-none text-muted small mb-4 d-inline-block">
+            <i class="bi bi-arrow-left"></i> Back to Event
+        </a>
+
+        <div class="ticket-card p-4 shadow-sm mb-4">
+            <div class="ms-2">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0">Ticket #{{ ticket.id }}</h5>
+                        <small class="text-muted">Event #{{ ticket.event_id }}</small>
+                    </div>
+                    <span class="badge text-white fs-6 px-3 py-2" style="background:var(--brand-purple)">
+                        ${{ ticket.price }}
+                    </span>
+                </div>
+
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0">
+                        <i class="bi bi-grid me-2 text-muted"></i>
+                        <strong>Row:</strong> {{ ticket.row ?: '—' }}
+                    </li>
+                    <li class="list-group-item px-0">
+                        <i class="bi bi-cursor me-2 text-muted"></i>
+                        <strong>Seat:</strong> {{ ticket.seat ?: '—' }}
+                    </li>
+                </ul>
+
+                <div class="mt-4 d-flex gap-2">
+                    <form action="{{ base_path }}/tickets/{{ ticket.id }}/delete" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Delete this ticket?')">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+{% set cat_colors = {
+    'Concert':  'background-color: #f3e8ff; color: #7e22ce;',
+    'Movies':   'background-color: #e0e7ff; color: #4338ca;',
+    'Sports':   'background-color: #dbeafe; color: #1d4ed8;',
+    'Theater':  'background-color: #fce7f3; color: #be185d;',
+    'Raffle':   'background-color: #fef3c7; color: #b45309;',
+    'Festival': 'background-color: #dcfce7; color: #15803d;',
+    'Comedy':   'background-color: #fef9c3; color: #a16207;'
+} %}
+
+<style>
+    .event-card {
+        border: 1px solid #eee;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: white;
+    }
+    .event-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+    }
+    .event-card .card-img-top {
+        height: 180px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    .event-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+    .badge-custom {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+    .line-clamp-1 {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;  
+        overflow: hidden;
+    }
+</style>
+
+<div class="card h-100 event-card border-0 shadow-sm rounded-4 overflow-hidden">
+    {# Image Section #}
+    <div class="position-relative overflow-hidden">
+        <img 
+            src="{{ event.event_image ?: event.image }}" 
+            class="card-img-top" 
+            alt="{{ event.title }}"
+            loading="lazy"
+        >
+        
+        {% if show_badge|default(true) %}
+            {% if event.badge %}
+                <span class="position-absolute top-0 start-0 m-3 badge bg-danger shadow-sm">
+                    {{ event.badge }}
+                </span>
+            {% endif %}
+            {% if event.badge_right is defined and event.badge_right %}
+                <span class="position-absolute top-0 end-0 m-3 badge bg-primary shadow-sm" style="background-color: var(--brand-purple) !important;">
+                    {{ event.badge_right }}
+                </span>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {# Body Section #}
+    <div class="card-body p-4">
+        {# Category Chip #}
+        <span class="badge-custom d-inline-block mb-2" 
+              style="{{ cat_colors[event.category] is defined ? cat_colors[event.category] : 'background-color: #f3f4f6; color: #374151;' }}">
+            {{ event.category }}
+        </span>
+
+        <h5 class="card-title fw-bold text-dark line-clamp-1 mb-3">{{ event.title }}</h5>
+
+        <div class="mb-3">
+            <div class="text-muted small mb-1">
+                <i class="bi bi-calendar3 me-2"></i>{{ event.date }}
+            </div>
+            <div class="text-muted small mb-1">
+                <i class="bi bi-geo-alt me-2"></i>{{ event.venue }}
+            </div>
+            {% if event.tickets is defined %}
+                <div class="text-muted small">
+                    <i class="bi bi-ticket-perforated me-2"></i>{{ event.tickets }} tickets left
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+            <div>
+                <span class="fs-5 fw-bold text-dark">${{ event.price|number_format(2) }}</span>
+                {% if event.original_price is defined and event.original_price %}
+                    <span class="text-decoration-line-through text-muted small ms-1">${{ event.original_price|number_format(2) }}</span>
+                {% endif %}
+            </div>
+            <a href="{{ base_path }}/events/{{ event.id }}" class="btn btn-sm px-3 rounded-pill" 
+               style="background-color: var(--brand-purple); color: white;">
+                Details
+            </a>
+        </div>
+    </div>
+</div>

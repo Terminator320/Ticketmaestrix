@@ -1,0 +1,22 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Edit Category - TicketMaestrix{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Edit Category</h2>
+    <a href="{{ base_path }}/categories" class="btn btn-secondary">Back to Categories</a>
+</div>
+
+<form action="{{ base_path }}/categories/{{ category.id }}/update" method="post" class="form">
+    <div class="form-group">
+        <label for="name">Category Name:</label>
+        <input type="text" id="name" name="name" value="{{ category.name }}" required>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Update Category</button>
+        <a href="{{ base_path }}/categories" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

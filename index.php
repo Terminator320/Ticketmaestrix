@@ -1,13 +1,28 @@
 <?php
 declare(strict_types=1);
 
-
-
+use App\Controllers\AdminController;
 use App\Controllers\AuthController;
+use App\Controllers\CartController;
+use App\Controllers\CategoryController;
+use App\Controllers\EventController;
 use App\Controllers\HomeController;
+use App\Controllers\OrderController;
+use App\Controllers\OrderItemController;
+use App\Controllers\TicketController;
+use App\Controllers\UserController;
+use App\Controllers\VenueController;
+use App\Helpers\Auth;
+use App\Helpers\Cart;
 use App\Middleware\MaintenanceMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
+use App\Models\CategoryModel;
+use App\Models\EventModel;
+use App\Models\OrderItemModel;
+use App\Models\OrderModel;
+use App\Models\TicketModel;
 use App\Models\UserModel;
+use App\Models\VenueModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -25,8 +40,17 @@ require __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+
+
+// ============== SESSION ==============
+// Bootstraps PHP sessions so Auth + Cart helpers can read/write $_SESSION.
+// Must run before any output and before the DI container builds controllers
+// that may consult Auth during construction.
+session_start();
+
+
+
 // ============== DATABASE ==============
-//   Connect RedBeanPHP to your MariaDB/MySQL database.
 R::setup(
     'mysql:host=' . $_ENV['DB_SERVER'] . ';port=' . ($_ENV['DB_PORT'] ?? '3306') . ';dbname=' . $_ENV['DB_NAME'] . ';charset=utf8mb4',
     $_ENV['DB_USERNAME'],
@@ -41,6 +65,12 @@ $twig   = new Environment($loader, [
     'cache'       => false,
     'auto_reload' => true,
 ]);
+
+// Twig globals — exposed to every template so the navbar (and any other
+// partial) can render auth-aware UI without each controller passing them.
+$twig->addGlobal('current_user', Auth::user());
+$twig->addGlobal('is_admin',     Auth::isAdmin());
+$twig->addGlobal('cart_count',   Cart::count());
 
 
 
@@ -57,12 +87,86 @@ $container->set(Environment::class, $twig);
 
 $container->set(HomeController::class, fn() => new HomeController(
     $twig,
+    new EventModel(),
+    new CategoryModel(),
+    new TicketModel(),
+    new VenueModel(),
+    new OrderItemModel(),
+    $basePath,
+));
+
+$container->set(CartController::class, fn() => new CartController(
+    $twig,
+    new TicketModel(),
+    new EventModel(),
+    new VenueModel(),
+    new OrderModel(),
+    new OrderItemModel(),
     $basePath,
 ));
 
 $container->set(AuthController::class, fn() => new AuthController(
     $twig,
     new UserModel(),
+    $basePath,
+));
+
+$container->set(UserController::class, fn() => new UserController(
+    $twig,
+    new UserModel(),
+    new TicketModel(),
+    new OrderModel(),
+    $basePath,
+));
+
+$container->set(AdminController::class, fn() => new AdminController(
+    $twig,
+    new UserModel(),
+    new EventModel(),
+    new OrderModel(),
+    new OrderItemModel(),
+    new CategoryModel(),
+    new VenueModel(),
+    new TicketModel(),
+    $basePath,
+));
+
+$container->set(CategoryController::class, fn() => new CategoryController(
+    $twig,
+    new CategoryModel(),
+    $basePath,
+));
+
+$container->set(EventController::class, fn() => new EventController(
+    $twig,
+    new EventModel(),
+    new CategoryModel(),
+    new VenueModel(),
+    $basePath,
+));
+
+$container->set(OrderController::class, fn() => new OrderController(
+    $twig,
+    new OrderModel(),
+    $basePath,
+));
+
+$container->set(OrderItemController::class, fn() => new OrderItemController(
+    $twig,
+    new OrderItemModel(),
+    $basePath,
+));
+
+$container->set(TicketController::class, fn() => new TicketController(
+    $twig,
+    new TicketModel(),
+    new EventModel(),
+    $basePath,
+));
+
+$container->set(VenueController::class, fn() => new VenueController(
+    $twig,
+    new VenueModel(),
     $basePath,
 ));
 
@@ -73,10 +177,8 @@ AppFactory::setContainer($container);
 
 $app = AppFactory::create();
 
-// Set the base path so Slim knows it's not running at the server root.
 $app->setBasePath($basePath);
-
-// Enable the Slim routing middleware (required for route matching)
+$app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 
 // Add error middleware so you get useful error pages instead of blank screens
@@ -85,22 +187,17 @@ $app->addRoutingMiddleware();
 $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 $app->addErrorMiddleware($debug, true, true);
 
-// ============== YOUR MIDDLEWARE ==============
+// ============== MIDDLEWARE ==============
 
-// ==============  Closure middleware  ==============
 $logFile = __DIR__ . '/var/app.log';
 
 $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($logFile) {
-
-    // --- BEFORE the request is handled ---
     $start  = microtime(true);
     $method = $request->getMethod();
     $path   = $request->getUri()->getPath();
 
-    // Pass control to the next layer (route handler or next middleware)
     $response = $handler->handle($request);
 
-    // --- AFTER the response is ready ---
     $status  = $response->getStatusCode();
     $elapsed = round((microtime(true) - $start) * 1000);
 
@@ -115,35 +212,123 @@ $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($l
     return $response;
 };
 
-// ==============  Invokable Class middleware  ==============
 $app->add(new MaintenanceMiddleware(
     flagFile:        __DIR__ . '/var/maintenance.flag',
     responseFactory: $app->getResponseFactory()
 ));
 
-
-
-// ==============  PSR-15 middleware  ==============
 $app->add(new SecurityHeadersMiddleware());
-
-// Logger must be added last so it wraps all other middleware and always runs
 $app->add($loggerMiddleware);
 
 
-// $app->add(new SecurityHeadersMiddleware([
-//     'X-Frame-Options' => 'SAMEORIGIN',   // override default
-//     'Cache-Control'   => 'no-store',      // add new one
-// ]));
-
 // ============== ROUTES ==============
 
+// --- Home ---
+$app->get('/',     [HomeController::class, 'index']);
+$app->get('/cart', [HomeController::class, 'showCart']);
+$app->get('/map',  [HomeController::class, 'showMap']);
 
-$app->get('/',                 [HomeController::class, 'index']);
-$app->get('/signup',           [AuthController::class, 'showSignup']);
-$app->get('/login',            [AuthController::class, 'showLogin']);
-$app->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
-$app->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
-$app->get('/newpassword',      [AuthController::class, 'showNewPassword']);
+// --- Auth ---
+$app->group('', function ($group) {
+    $group->get('/signup',           [AuthController::class, 'showSignup']);
+    $group->post('/signup',          [AuthController::class, 'signup']);
+    $group->get('/login',            [AuthController::class, 'showLogin']);
+    $group->post('/login',           [AuthController::class, 'login']);
+    $group->post('/logout',          [AuthController::class, 'logout']);
+    $group->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
+    $group->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
+    $group->get('/newpassword',      [AuthController::class, 'showNewPassword']);
+});
+
+// --- Admin ---
+$app->get('/admin', [AdminController::class, 'showAdminDashboard']);
+$app->post('/admin/users/create', [AdminController::class, 'createAdmin']);
+$app->post('/admin/users/{id}/delete', [AdminController::class, 'deleteAdmin']);
+
+// --- Users ---
+$app->group('/users', function ($group) {
+    $group->get('',               [UserController::class, 'index']);
+    $group->post('',              [UserController::class, 'store']);
+    $group->get('/{id}',         [UserController::class, 'viewDetails']);
+    $group->post('/{id}',        [UserController::class, 'update']);
+    $group->post('/{id}/role',   [UserController::class, 'roleToggle']);
+    $group->post('/{id}/delete', [UserController::class, 'delete']);
+});
+$app->get('/profile',    [UserController::class, 'showProfile']);
+$app->get('/editprofile',[UserController::class, 'editProfile']);
+$app->post('/editprofile',[UserController::class, 'updateProfile']);
+
+// --- Categories ---
+$app->group('/categories', function ($group) {
+    $group->get('',               [CategoryController::class, 'index']);
+    $group->get('/create',        [CategoryController::class, 'create']);
+    $group->post('',              [CategoryController::class, 'store']);
+    $group->get('/{id}',         [CategoryController::class, 'viewDetails']);
+    $group->get('/{id}/edit',    [CategoryController::class, 'edit']);
+    $group->post('/{id}/update', [CategoryController::class, 'update']);
+    $group->post('/{id}/delete', [CategoryController::class, 'destroy']);
+});
+
+// --- Events ---
+$app->group('/events', function ($group) {
+    $group->get('',                   [EventController::class, 'index']);
+    $group->get('/create',            [EventController::class, 'create']);
+    $group->post('',                  [EventController::class, 'store']);
+    $group->get('/category/{id}',     [EventController::class, 'byCategory']);
+    $group->get('/{id}',              [EventController::class, 'viewDetails']);
+    $group->get('/{id}/edit',         [EventController::class, 'edit']);
+    $group->post('/{id}/update',      [EventController::class, 'update']);
+    $group->post('/{id}/delete',      [EventController::class, 'destroy']);
+});
+
+// --- Venues ---
+$app->group('/venues', function ($group) {
+    $group->get('',               [VenueController::class, 'index']);
+    $group->get('/create',        [VenueController::class, 'create']);
+    $group->post('',              [VenueController::class, 'store']);
+    $group->get('/{id}',         [VenueController::class, 'viewDetails']);
+    $group->get('/{id}/edit',    [VenueController::class, 'edit']);
+    $group->post('/{id}/update', [VenueController::class, 'update']);
+    $group->post('/{id}/delete', [VenueController::class, 'destroy']);
+});
+
+// --- Tickets ---
+$app->group('/tickets', function ($group) {
+    $group->get('',               [TicketController::class, 'index']);
+    $group->get('/create',        [TicketController::class, 'create']);
+    $group->post('',              [TicketController::class, 'store']);
+    $group->get('/event/{id}',   [TicketController::class, 'byEvent']);
+    $group->get('/{id}',         [TicketController::class, 'viewDetails']);
+    $group->get('/{id}/edit',    [TicketController::class, 'edit']);
+    $group->post('/{id}/update', [TicketController::class, 'update']);
+    $group->post('/{id}/delete', [TicketController::class, 'destroy']);
+});
+
+// --- Orders ---
+$app->group('/orders', function ($group) {
+    $group->post('',              [OrderController::class, 'store']);
+    $group->get('/user/{id}',    [OrderController::class, 'byUser']);
+    $group->get('/{id}',         [OrderController::class, 'viewDetails']);
+    $group->post('/{id}',        [OrderController::class, 'update']);
+    $group->post('/{id}/delete', [OrderController::class, 'delete']);
+});
+
+// --- Order Items ---
+$app->group('/order-items', function ($group) {
+    $group->post('',              [OrderItemController::class, 'store']);
+    $group->get('/order/{id}',   [OrderItemController::class, 'byOrder']);
+    $group->get('/{id}',         [OrderItemController::class, 'viewDetails']);
+    $group->post('/{id}',        [OrderItemController::class, 'update']);
+    $group->post('/{id}/delete', [OrderItemController::class, 'delete']);
+});
+
+// --- Cart ---
+$app->group('/cart', function ($group) {
+    $group->post('/add',                  [CartController::class, 'add']);
+    $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
+    $group->post('/clear',                [CartController::class, 'clear']);
+    $group->post('/checkout',             [CartController::class, 'checkout']);
+});
 
 
 $app->run();

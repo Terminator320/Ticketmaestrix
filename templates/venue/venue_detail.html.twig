@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ venue.name }} - TicketMaestrix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root { --brand-purple: #5E246E; }
+        body { background-color: #F8F9FA; }
+        .venue-hero { height: 220px; background: linear-gradient(135deg, #371840, #5E246E); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+    {% include 'partials/navbar.html.twig' %}
+
+    <div class="container py-5" style="max-width: 720px;">
+        <a href="{{ base_path }}/" class="text-decoration-none text-muted small mb-4 d-inline-block">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+
+        {% if venue.image_url %}
+        <img src="{{ venue.image_url }}" alt="{{ venue.name }}"
+             class="w-100 rounded-4 mb-4" style="height:220px;object-fit:cover;">
+        {% else %}
+        <div class="venue-hero mb-4">
+            <i class="bi bi-building text-white" style="font-size: 4rem;"></i>
+        </div>
+        {% endif %}
+
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h3 class="fw-bold mb-1">{{ venue.name }}</h3>
+            <p class="text-muted mb-3">{{ venue.description ?: 'No description provided.' }}</p>
+
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item px-0">
+                    <i class="bi bi-geo-alt me-2 text-muted"></i>
+                    <strong>Address:</strong> {{ venue.address ?: '—' }}
+                </li>
+                <li class="list-group-item px-0">
+                    <i class="bi bi-people me-2 text-muted"></i>
+                    <strong>Capacity:</strong> {{ venue.capacity ?: '—' }}
+                </li>
+            </ul>
+
+            <div class="mt-4">
+                <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Delete this venue?')">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

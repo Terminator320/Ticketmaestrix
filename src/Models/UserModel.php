@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use RedBeanPHP\R;
+use App\Helpers\BeanHelper;
 
 class UserModel
 {
     public function findAll(): array
     {
-        return R::findAll('users');
+        return BeanHelper::castBeanArray(R::findAll('users'));
     }
 
     public function load(int $id): mixed
@@ -18,22 +19,31 @@ class UserModel
         return R::load('users', $id);
     }
 
+    // --- ADDED FOR ADMIN CRUD ---
+    public function getAllAdmins(): array
+    {
+        // Finds all users where the role is 'admin'
+        return BeanHelper::castBeanArray(R::findAll('users', 'role = ?', ['admin']));
+    }
+
     public function findByEmail(string $email): mixed
     {
         return R::findOne('users', 'email = ?', [$email]);
     }
 
-    public function create(string $firstName, string $lastName, string $email,
-                           string $password, string $phoneNumber, string $role = 'user'): void
+    public function create(array $data): \RedBeanPHP\OODBBean
     {
         $bean = R::dispense('users');
-        $bean->first_name   = $firstName;
-        $bean->last_name    = $lastName;
-        $bean->email        = $email;
-        $bean->password     = password_hash($password, PASSWORD_DEFAULT);
-        $bean->phone_number = $phoneNumber;
-        $bean->role         = $role;
+        $bean->first_name   = $data['first_name'];
+        $bean->last_name    = $data['last_name'];
+        $bean->email        = $data['email'];
+        // Passwords should be hashed before hitting the model ideally, 
+        // but keeping your structure consistent here:
+        $bean->password     = password_hash($data['password'], PASSWORD_DEFAULT);
+        $bean->phone_number = $data['phone_number'] ?? null;
+        $bean->role         = $data['role'] ?? 'user';
         R::store($bean);
+        return BeanHelper::castBeanProperties($bean);
     }
 
     public function save(mixed $bean): void
@@ -41,8 +51,62 @@ class UserModel
         R::store($bean);
     }
 
-    public function delete(mixed $bean): void
+    // --- UPDATED FOR CONVENIENCE ---
+    public function deleteById(int $id): void
     {
-        R::trash($bean);
+        $user = R::load('users', $id);
+        if ($user->id) {
+            R::trash($user);
+        }
+    }
+
+    /**
+     * Updated to handle password changes and role management.
+     */
+    public function update(int $id, array $data): ?\RedBeanPHP\OODBBean
+    {
+        $user = R::load('users', $id);
+        if (!BeanHelper::isValidBean($user)) {
+            return null;
+        }
+
+        if (array_key_exists('first_name', $data)) {
+            $user->first_name = (string) $data['first_name'];
+        }
+        if (array_key_exists('last_name', $data)) {
+            $user->last_name = (string) $data['last_name'];
+        }
+        if (array_key_exists('email', $data)) {
+            $user->email = (string) $data['email'];
+        }
+        if (array_key_exists('phone_number', $data)) {
+            $user->phone_number = (string) $data['phone_number'];
+        }
+        
+        // ADDED: Handle password updates specifically for the Admin Edit form
+        if (!empty($data['password'])) {
+            $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+
+        R::store($user);
+        return BeanHelper::castBeanProperties($user);
+    }
+
+    public function delete(int $id): void
+{
+    // R::load finds the 'user' bean by its primary key ID
+    $user = \RedBeanPHP\R::load('user', $id);
+    
+    // If the user exists (id > 0), delete it from the database
+    if ($user->id) {
+        \RedBeanPHP\R::trash($user);
+    }
+}
+
+    public function customerCount(): int
+    {
+        return (int) R::getCell(
+            "SELECT COUNT(*) FROM users WHERE role = 'user'"
+        );
     }
 }

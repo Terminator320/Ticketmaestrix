@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        :root { 
+            --brand-purple: #5E246E; 
+            --brand-hover: #4a1d56; 
+        }
+
+        body { 
+            background-color: #ffffff; 
+            font-family: 'Inter', sans-serif; 
+            color: #1a202c;
+        }
+
+        /* Page Header Styling */
+        .page-header {
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        /* Purple Button Theme - Fixed Hover for Bootstrap */
+        .btn-purple {
+            background-color: var(--brand-purple) !important;
+            color: white !important;
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 12px 28px;
+            border: none !important;
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-purple:hover {
+            background-color: var(--brand-hover) !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+        }
+
+        /* Event Card Design */
+        .event-card {
+            border: 1px solid #f0f0f0;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .event-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .event-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: #f8fafc;
+        }
+
+        .card-content {
+            padding: 1.75rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Pagination Styling */
+        .pagination .page-link {
+            color: var(--brand-purple);
+            border: 1px solid #eee;
+            margin: 0 4px;
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 10px 18px;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--brand-purple);
+            border-color: var(--brand-purple);
+            color: white;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: #ccc;
+        }
+
+        .admin-footer {
+            margin-top: auto;
+            padding-top: 1.25rem;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Existing Navbar Include -->
+    {% include 'partials/navbar.html.twig' %}
+
+    <div class="container">
+        
+        <!-- Header Section -->
+        <header class="page-header d-flex justify-content-between align-items-center">
+            <h1 class="fw-800 display-6 mb-0">Events</h1>
+            <a href="{{ base_path }}/events/create" class="btn-purple">
+                <i class="bi bi-plus-lg me-2"></i> Add New Event
+            </a>
+        </header>
+
+        <!-- Events Grid (Controller should limit this to 9) -->
+        <div class="row g-4">
+            {% for event in events %}
+            <div class="col-md-6 col-lg-4">
+                <article class="event-card">
+                    
+                    <!-- Dynamic Event Image -->
+                    {% if event.event_image %}
+                        <img src="{{ event.event_image }}" class="event-img" alt="{{ event.title }}">
+                    {% else %}
+                        <div class="event-img d-flex align-items-center justify-content-center bg-light">
+                            <i class="bi bi-calendar2-event text-muted opacity-25" style="font-size: 3.5rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-content">
+                        <h3 class="h5 fw-bold mb-3">{{ event.title|e('html') }}</h3>
+                        
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-calendar3 me-2" style="color: var(--brand-purple);"></i>
+                            {{ event.date }}
+                        </div>
+                        
+                        <div class="small text-muted mb-4">
+                            <i class="bi bi-geo-alt-fill me-2" style="color: var(--brand-purple);"></i>
+                            Venue ID: {{ event.venue_id }}
+                        </div>
+
+                        <!-- Ticket Button -->
+                        <a href="{{ base_path }}/tickets/event/{{ event.id }}" class="btn-purple w-100 mb-3 text-center">
+                            Manage Tickets
+                        </a>
+
+                        <!-- Admin Actions -->
+                        <div class="admin-footer">
+                            <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary px-3">
+                                <i class="bi bi-pencil-square me-1"></i> Edit
+                            </a>
+                            
+                            <form action="{{ base_path }}/events/{{ event.id }}/delete" method="post" class="m-0" onsubmit="return confirm('Delete this event?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger px-3">
+                                    <i class="bi bi-trash3 me-1"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted fs-5">No events currently found.</p>
+                <a href="{{ base_path }}/events/create" class="text-purple fw-bold">Create the first one</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- DYNAMIC PAGINATION -->
+        {% if totalPages > 1 %}
+        <nav class="my-5">
+            <ul class="pagination justify-content-center">
+                
+                <!-- Previous Page Link -->
+                <li class="page-item {{ currentPage <= 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="?page={{ currentPage - 1 }}">Previous</a>
+                </li>
+
+                <!-- Page Number Links -->
+                {% for i in 1..totalPages %}
+                <li class="page-item {{ i == currentPage ? 'active' : '' }}">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+
+                <!-- Next Page Link -->
+                <li class="page-item {{ currentPage >= totalPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="?page={{ currentPage + 1 }}">Next</a>
+                </li>
+                
+            </ul>
+        </nav>
+        {% endif %}
+
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

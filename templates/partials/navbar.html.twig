@@ -1,31 +1,124 @@
-{# Navbar #}
-<nav class="bg-purple-900 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            <a href="{{ base_path }}/" class="text-white font-bold text-xl tracking-tight">
-                ticketmaestrix
-            </a>
+<nav class="navbar navbar-expand-md navbar-dark sticky-top shadow-sm" style="background-color: #5E246E;">
+    <div class="container-fluid px-4">
+        
+        <a class="navbar-brand fw-bold fs-4 tracking-tight m-0">
+            ticketmaestrix
+        </a>
 
-            {# Desktop links #}
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="{{ base_path }}/" class="text-purple-200 hover:text-white font-medium transition flex items-center gap-1.5"><i data-lucide="home" class="w-4 h-4"></i> Home</a>
-                <a href="{{ base_path }}/events" class="text-purple-200 hover:text-white font-medium transition flex items-center gap-1.5"><i data-lucide="ticket" class="w-4 h-4"></i> Events</a>
-                <a href="{{ base_path }}/map" class="text-purple-200 hover:text-white font-medium transition flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4"></i> Map</a>
-                <a href="{{ base_path }}/profile" class="text-purple-200 hover:text-white font-medium transition flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4"></i> Profile</a>
-            </div>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            {# Mobile hamburger button #}
-            <button class="md:hidden text-white" id="mobile-menu-btn" aria-label="Toggle menu">
-                <i data-lucide="menu" class="w-6 h-6"></i>
-            </button>
-        </div>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-center">
+                <li class="nav-item px-2">
+                    <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'home' %}active{% endif %}" href="{{ base_path }}/">
+                        <i class="bi bi-house-door"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item px-2">
+                    <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'events' %}active{% endif %}" href="{{ base_path }}/events">
+                        <i class="bi bi-ticket-perforated"></i> Events
+                    </a>
+                </li>
+                <li class="nav-item px-2">
+                    <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'map' %}active{% endif %}" href="{{ base_path }}/map">
+                        <i class="bi bi-geo-alt"></i> Map
+                    </a>
+                </li>
 
-        {# Mobile menu (hidden by default) #}
-        <div class="md:hidden hidden pb-4 space-y-2" id="mobile-menu">
-            <a href="{{ base_path }}/" class="block text-purple-200 py-2 flex items-center gap-2"><i data-lucide="home" class="w-4 h-4"></i> Home</a>
-            <a href="{{ base_path }}/events" class="block text-purple-200 py-2 flex items-center gap-2"><i data-lucide="ticket" class="w-4 h-4"></i> Events</a>
-            <a href="{{ base_path }}/map" class="block text-purple-200 py-2 flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i> Map</a>
-            <a href="{{ base_path }}/profile" class="block text-purple-200 py-2 flex items-center gap-2"><i data-lucide="user" class="w-4 h-4"></i> Profile</a>
+                {# Cart icon with live count badge from the cart_count Twig global #}
+                <li class="nav-item px-2">
+                    <a class="nav-link d-flex align-items-center gap-2 position-relative {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
+                        <i class="bi bi-cart3"></i>
+                        <span class="d-md-none">Cart</span>
+                        {% if cart_count and cart_count > 0 %}
+                            <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem;">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+
+                {# Auth-aware section: profile + admin + logout when logged in, login + signup when not #}
+                {% if current_user %}
+                    <li class="nav-item px-2">
+                        <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'profile' %}active{% endif %}" href="{{ base_path }}/profile">
+                            <i class="bi bi-person-circle"></i> {{ current_user.first_name }}
+                        </a>
+                    </li>
+                    {% if is_admin %}
+                        <li class="nav-item px-2">
+                            <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'admin' %}active{% endif %}" href="{{ base_path }}/admin">
+                                <i class="bi bi-shield-lock"></i> Admin
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item px-2">
+                        {# Logout is a POST so it can't be triggered by a stray GET / link prefetch. #}
+                        <form method="POST" action="{{ base_path }}/logout" class="d-inline m-0">
+                            <button type="submit" class="nav-link btn btn-link p-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="nav-item px-2">
+                        <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'login' %}active{% endif %}" href="{{ base_path }}/login">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item px-2">
+                        <a class="nav-link d-flex align-items-center gap-2" href="{{ base_path }}/signup">
+                            <i class="bi bi-person-plus"></i> Sign up
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="nav-item dropdown ms-md-3">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 border rounded-pill px-3 mt-2 mt-md-0" 
+                       href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                       style="border-color: rgba(255,255,255,0.2) !important;">
+                        <i class="bi bi-globe"></i> EN
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="langDropdown">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between" href="?lang=en">
+                                English <span class="badge bg-light text-dark ms-2">EN</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between" href="?lang=fr">
+                                Français <span class="badge bg-light text-dark ms-2">FR</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
 </nav>
+
+<style>
+    .navbar-brand {
+        margin-right: 0;
+    }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-weight: 400; 
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Homepage Bold Logic */
+    .nav-link.active {
+        color: #fff !important;
+        font-weight: 700 !important; 
+    }
+
+    .nav-link:hover {
+        color: #fff !important;
+    }
+
+    .dropdown-item:active {
+        background-color: #5E246E;
+    }
+</style>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map - TicketMaestrix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body, html { height: 100%; margin: 0; overflow: hidden; }
+        .main-wrapper { display: flex; flex-direction: column; height: 100vh; }
+        .content-area { display: flex; flex: 1; overflow: hidden; }
+        
+        /* Sidebar Styling */
+        .map-sidebar { width: 350px; background: white; border-right: 1px solid #dee2e6; overflow-y: auto; padding: 1.5rem; }
+        .search-box { position: relative; margin-bottom: 1rem; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #adb5bd; }
+        .search-box input { padding-left: 35px; border-radius: 8px; border: 1px solid #ddd; }
+        
+        .btn-location { background-color: #9b51e0; color: white; border: none; border-radius: 8px; width: 100%; padding: 10px; font-weight: 600; margin-bottom: 1.5rem; }
+        
+        .event-card-mini { border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; gap: 12px; transition: all 0.2s; cursor: pointer; }
+        .event-card-mini:hover { border-color: #9b51e0; background-color: #fbf8ff; }
+        .event-img { width: 60px; height: 60px; background: #eee; border-radius: 8px; flex-shrink: 0; }
+        
+        /* Map Area Styling */
+        .map-container { flex: 1; background-color: #e9ecef; position: relative; display: flex; align-items: center; justify-content: center; }
+        .map-placeholder-box { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 400px; z-index: 5; }
+        .map-placeholder-box i { font-size: 3rem; color: #9b51e0; margin-bottom: 1rem; display: block; }
+        
+        /* Floating UI Elements */
+        .zoom-controls { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 5px; }
+        .zoom-btn { width: 36px; height: 36px; background: white; border: 1px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
+        
+        .legend-box { position: absolute; bottom: 20px; left: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; margin-bottom: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        {% include 'partials/navbar.html.twig' %}
+
+        <div class="content-area">
+            <!-- Sidebar -->
+            <div class="map-sidebar">
+                <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-primary me-2"></i>Events Near You</h5>
+                
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" placeholder="Search location...">
+                </div>
+
+                <button class="btn-location"><i class="bi bi-send-fill me-2"></i> Use My Location</button>
+
+                {% for event in events %}
+                <a href="{{ base_path }}/events/{{ event.id }}" class="text-decoration-none text-reset">
+                    <div class="event-card-mini">
+                        {% if event.event_image %}
+                            <img src="{{ event.event_image }}" alt="{{ event.title }}" class="event-img">
+                        {% else %}
+                            <div class="event-img"></div>
+                        {% endif %}
+                        <div>
+                            <h6 class="fw-bold mb-0" style="font-size: 0.95rem;">{{ event.title }}</h6>
+                            <small class="text-muted d-block">{{ event.venue_name }}</small>
+                            <small class="fw-bold text-primary">
+                                {% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}TBA{% endif %}
+                            </small>
+                            <small class="text-muted"> • {{ event.date }}</small>
+                        </div>
+                    </div>
+                </a>
+                {% else %}
+                    <div class="text-muted text-center py-4">No upcoming events nearby.</div>
+                {% endfor %}
+            </div>
+
+            <!-- Map View Area -->
+            <div class="map-container">
+                <!-- Floating Controls -->
+                <div class="zoom-controls">
+                    <div class="zoom-btn">+</div>
+                    <div class="zoom-btn">-</div>
+                </div>
+
+                <!-- Center Prompt -->
+                <div class="map-placeholder-box">
+                    <i class="bi bi-geo-alt"></i>
+                    <h5 class="fw-bold">Explore Events on the Map</h5>
+                    <p class="text-muted small">Click on any marker to see event details</p>
+                </div>
+
+                <!-- Legend -->
+                <div class="legend-box">
+                    <div class="fw-bold small mb-2">Legend</div>
+                    <div class="legend-item"><span class="dot bg-primary"></span> Regular Event</div>
+                    <div class="legend-item"><span class="dot bg-danger"></span> On Sale</div>
+                    <div class="legend-item"><span class="dot bg-info"></span> Selected</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

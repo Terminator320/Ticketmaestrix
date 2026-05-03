@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TicketMaestrix{% endblock %}</title>
+    <link rel="stylesheet" href="{{ base_path }}/assets/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <h1><a href="{{ base_path }}/">TicketMaestrix</a></h1>
+                <ul class="nav-links">
+                    <li><a href="{{ base_path }}/events">Events</a></li>
+                    <li><a href="{{ base_path }}/categories">Categories</a></li>
+                    <li><a href="{{ base_path }}/venues">Venues</a></li>
+                    <li><a href="{{ base_path }}/tickets">Tickets</a></li>
+                    <li><a href="{{ base_path }}/admin">Admin</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 TicketMaestrix. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

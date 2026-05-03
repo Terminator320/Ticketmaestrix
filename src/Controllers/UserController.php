@@ -1,40 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
-use App\Models\UserModel as UserModel;
+use App\Helpers\Auth;
+use App\Models\OrderModel;
+use App\Models\TicketModel;
+use App\Models\UserModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
 
-class UserController {
+/**
+ * User-facing profile pages and admin-only user management.
+ */
+class UserController
+{
     public function __construct(
         private Environment $twig,
-        private UserModel $userModel,
-        private string $basePath,
+        private UserModel   $userModel,
+        private TicketModel $ticketModel,
+        private OrderModel  $orderModel,
+        private string      $basePath,
     ) {}
 
-     public function store(Request $request, Response $response): Response {
-        $data = (array) $request->getParsedBody();
-        $user = trim($data['user'] ?? '');
-
-        if ($user !== '') {
-            $this->userModel->create(
-                $user['first_name'],
-                $user['last_name'],
-                $user['email'],
-                $user['password'],
-                $user['phone_number']
-            );
-        }
+    /** POST /users — create a new user (admin form). */
+    public function store(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $this->userModel->create($data);
 
         return $response
             ->withHeader('Location', $this->basePath . '/users')
             ->withStatus(302);
-     }
+    }
 
-     public function roleToggle(Request $request, Response $response): Response {
-        $user = $this->userModel-> load((int)$request->getAttribute('id') ?? 0);
+    /** POST /users/{id}/role — toggle admin/user role. Admin-only. */
+    public function roleToggle(Request $request, Response $response, array $args): Response
+    {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
+        $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if ($user->id) {
             $user->role = $user->role === 'admin' ? 'user' : 'admin';
@@ -44,37 +52,30 @@ class UserController {
         return $response
             ->withHeader('Location', $this->basePath . '/users')
             ->withStatus(302);
-     }
+    }
 
-     public function update(Request $request, Response $response): Response {
-        $user = $this->userModel->load((int)$request->getAttribute('id') ?? 0);
-
-        if ($user->id) {
-            $data = (array) $request->getParsedBody();
-            $userData = trim($data['user'] ?? '');
-
-            if ($userData !== '') {
-                $user->first_name = $userData['first_name'];
-                $user->last_name = $userData['last_name'];
-                $user->email = $userData['email'];
-                $user->phone_number = $userData['phone_number'];
-
-                if (!empty($userData['password'])) {
-                    $user->password = password_hash($userData['password'], PASSWORD_DEFAULT);
-                }
-
-                $this->userModel->save($user);
-            }
+    /** POST /users/{id} — admin updates a user's details. */
+    public function update(Request $request, Response $response, array $args): Response
+    {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
         }
+        $id   = (int) ($args['id'] ?? 0);
+        $data = $request->getParsedBody();
+        $this->userModel->update($id, $data);
 
         return $response
             ->withHeader('Location', $this->basePath . '/users')
             ->withStatus(302);
+    }
 
-     }
-
-     public function delete(Request $request, Response $response): Response {
-        $user = $this->userModel->load((int)$request->getAttribute('id') ?? 0);
+    /** POST /users/{id}/delete — admin deletes a user. */
+    public function delete(Request $request, Response $response, array $args): Response
+    {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
+        $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if ($user->id) {
             $this->userModel->delete($user);
@@ -83,10 +84,15 @@ class UserController {
         return $response
             ->withHeader('Location', $this->basePath . '/users')
             ->withStatus(302);
-     }
+    }
 
-     public function viewDetails(Request $request, Response $response): Response {
-        $user = $this->userModel->load((int)$request->getAttribute('id') ?? 0);
+    /** GET /users/{id} — admin views one user's detail page. */
+    public function viewDetails(Request $request, Response $response, array $args): Response
+    {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
+        $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if (!$user->id) {
             return $response
@@ -94,11 +100,103 @@ class UserController {
                 ->withStatus(302);
         }
 
-        $html = $this->twig->render('REPLACELATER', [
-            'user' => $user,
+        $html = $this->twig->render('user/user_detail.html.twig', [
+            'base_path'     => $this->basePath,
+            'current_route' => 'profile',
+            'user'          => $user,
         ]);
 
         $response->getBody()->write($html);
         return $response;
-     }
+    }
+
+    /** GET /users — admin-only listing of all users. */
+    public function index(Request $request, Response $response): Response
+    {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
+        $users = $this->userModel->findAll();
+
+        $html = $this->twig->render('user/index.html.twig', [
+            'base_path'     => $this->basePath,
+            'current_route' => 'admin',
+            'users'         => $users,
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    /** GET /profile — the logged-in user's own profile page with stats. */
+    public function showProfile(Request $request, Response $response): Response
+    {
+        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
+            return $redirect;
+        }
+        $user = Auth::user();
+        $id   = (int) $user->id;
+
+        $html = $this->twig->render('user/profile.html.twig', [
+            'base_path'       => $this->basePath,
+            'current_route'   => 'profile',
+            'user'            => $user,
+            'tickets_count'   => $this->ticketModel->countByOrderItemsForUser($id),
+            'total_spent'     => number_format($this->orderModel->totalSpentByUser($id), 2, '.', ''),
+            'events_attended' => $this->orderModel->eventsAttendedByUser($id),
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    /** GET /editprofile — show the form for editing the logged-in user. */
+    public function editProfile(Request $request, Response $response): Response
+    {
+        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        $html = $this->twig->render('user/edit_profile.html.twig', [
+            'base_path'     => $this->basePath,
+            'current_route' => 'profile',
+            'user'          => Auth::user(),
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    /**
+     * POST /editprofile — save the logged-in user's edits. Splits the
+     * single "Full Name" input on first space; ignores fields that don't
+     * exist on the users table (birthday, location, bio).
+     */
+    public function updateProfile(Request $request, Response $response): Response
+    {
+        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        $id   = (int) Auth::userId();
+        $data = $request->getParsedBody();
+        $form = (array) ($data['user'] ?? []);
+
+        // Split "First Last" into first_name + last_name.
+        $fullName  = trim((string) ($form['name'] ?? ''));
+        $parts     = explode(' ', $fullName, 2);
+        $firstName = $parts[0] ?? '';
+        $lastName  = $parts[1] ?? '';
+
+        $this->userModel->update($id, [
+            'first_name'   => $firstName,
+            'last_name'    => $lastName,
+            'email'        => (string) ($form['email'] ?? ''),
+            'phone_number' => (string) ($form['phone'] ?? ''),
+        ]);
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/profile')
+            ->withStatus(302);
+    }
 }

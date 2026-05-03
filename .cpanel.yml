@@ -19,5 +19,7 @@ deployment:
         --exclude='.well-known/'
         --exclude='var/'
         ./ $DEPLOYPATH
+    - find $DEPLOYPATH -not -path "$DEPLOYPATH/var*" -type f -exec chmod 644 {} \;
+    - find $DEPLOYPATH -not -path "$DEPLOYPATH/var*" -type d -exec chmod 755 {} \;
     - mkdir -p $DEPLOYPATH/var && chmod 700 $DEPLOYPATH/var
     - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader --no-interaction

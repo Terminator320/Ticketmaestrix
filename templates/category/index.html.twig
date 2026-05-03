@@ -1,0 +1,33 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Categories - TicketMaestrix{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Categories</h2>
+    <a href="{{ base_path }}/categories/create" class="btn btn-primary">Add New Category</a>
+</div>
+
+<div class="grid">
+    {% for category in categories %}
+    <div class="card" data-name="{{ category.name|e('html_attr') }}">
+        <div class="card-header">
+            <h3>{{ category.name|e('html') }}</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>ID:</strong> {{ category.id }}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{{ base_path }}/categories/{{ category.id }}/edit" class="btn btn-secondary">Edit</a>
+            <form action="{{ base_path }}/categories/{{ category.id }}/delete" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this category?')">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No categories found. <a href="{{ base_path }}/categories/create">Add the first category</a>.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
