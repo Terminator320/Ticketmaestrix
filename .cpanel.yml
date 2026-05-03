@@ -1,5 +1,23 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/Ticketmaestrix/public_html/
-    - /bin/cp -R public $DEPLOYPATH
+    - export DEPLOYPATH=$HOME/public_html/
+    - /usr/bin/rsync -av --delete
+        --exclude='.git/'
+        --exclude='.github/'
+        --exclude='.gitignore'
+        --exclude='.gitattributes'
+        --exclude='.cpanel.yml'
+        --exclude='.env'
+        --exclude='.env.*'
+        --exclude='node_modules/'
+        --exclude='package.json'
+        --exclude='package-lock.json'
+        --exclude='update.bat'
+        --exclude='README.md'
+        --exclude='LICENSE'
+        --exclude='.well-known/'
+        --exclude='var/'
+        ./ $DEPLOYPATH
+    - mkdir -p $DEPLOYPATH/var && chmod 700 $DEPLOYPATH/var
+    - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader --no-interaction

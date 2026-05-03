@@ -1,0 +1,54 @@
+{#
+  Reusable placeholder event card.
+  Expected variables:
+    - item.title   (string)
+    - item.cat     (string)
+    - item.price   (string)
+    - item.original (string|null)  — strike-through price
+    - item.badge    (string|null)  — badge label (e.g. "ON SALE")
+    - badge_color   (string)       — Tailwind bg class for the badge (default: bg-red-500)
+#}
+
+{% set cat_colors = {
+    'Concert':  'bg-purple-100 text-purple-700',
+    'Movies':   'bg-indigo-100 text-indigo-700',
+    'Sports':   'bg-blue-100 text-blue-700',
+    'Theater':  'bg-pink-100 text-pink-700',
+    'Raffle':   'bg-amber-100 text-amber-700',
+    'Festival': 'bg-green-100 text-green-700'
+} %}
+
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition">
+    <div class="relative">
+        {% if item.image is defined and item.image %}
+            <img src="{{ item.image }}" alt="{{ item.title }}" class="aspect-video w-full object-cover" loading="lazy">
+        {% else %}
+            <div class="aspect-video bg-gray-200 animate-pulse"></div>
+        {% endif %}
+        {% if item.badge is defined and item.badge %}
+            <span class="absolute top-3 left-3 {{ badge_color is defined ? badge_color : 'bg-red-500' }} text-white text-xs font-semibold px-2 py-0.5 rounded">
+                {{ item.badge }}
+            </span>
+        {% endif %}
+    </div>
+    <div class="p-4">
+        <span class="inline-block text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded {{ cat_colors[item.cat] is defined ? cat_colors[item.cat] : 'bg-gray-100 text-gray-700' }}">
+            {{ item.cat }}
+        </span>
+        <h3 class="font-semibold text-gray-900 mt-2">{{ item.title }}</h3>
+        <p class="text-xs text-gray-500 mt-1">📅 Coming soon</p>
+        <p class="text-xs text-gray-500">📍 New York</p>
+        <p class="text-xs text-gray-500">🎫 Tickets available</p>
+        <div class="flex items-center justify-between mt-3">
+            <div>
+                <span class="text-lg font-bold text-gray-900">${{ item.price }}</span>
+                {% if item.original is defined and item.original %}
+                    <span class="text-xs text-gray-400 line-through ml-1">${{ item.original }}</span>
+                {% endif %}
+            </div>
+            <a href="#" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                View Details
+            </a>
+        </div>
+    </div>
+</div>

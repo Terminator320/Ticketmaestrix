@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticketmaestrix - Signup</title>
+</head>
+<body>
+    <div>
+        <h1>Join Ticketmaestrix</h1>
+        <p>Create your account and start exploring events</p>
+    </div>
+    <div>
+        <form action="/signup" method="POST">
+            <div>
+                <label for="fullname">Full Name</label>
+                <input type="text" id="fullname" name="fullname" required>
+            </div>
+            <div>
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+            <div>
+                <label for="password2">Confirm Password</label>
+                <input type="password" id="password2" name="password2" placeholder="••••••••" required>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label> I agree to the <a href="#">Terms and Conditions</a> and <a href="#">Privacy Policy</a></label>
+            </div>
+            <button type="submit" href="/Ticketmaestrix/login">Create Account</button>
+        </form>
+        <div class="signup">
+            <p> Or sign up with </p>
+            <button class="btn-google">Google</button>
+            <button class="btn-facebook">Facebook</button>
+        </div>
+        <p>Already have an account? <a href="/Ticketmaestrix/login">Login</a></p>
+    </div>
+</body>
+</html>
