@@ -148,39 +148,49 @@ public function search(array $filters, int $limit, int $offset): array
     $where = [];
     $bindings = [];
     
-    // Search by query string (title, description, or venue name)
+    // Search by query string (title or description)
     if (!empty($filters['q'])) {
         $searchTerm = '%' . $filters['q'] . '%';
-        $where[] = '(e.title LIKE ? OR e.description LIKE ? OR v.name LIKE ?)';
-        $bindings[] = $searchTerm;
+        $where[] = '(title LIKE ? OR description LIKE ?)';
         $bindings[] = $searchTerm;
         $bindings[] = $searchTerm;
     }
     
     // Filter by category
     if (!empty($filters['category'])) {
-        $where[] = 'e.category_id = ?';
+        $where[] = 'category_id = ?';
         $bindings[] = (int) $filters['category'];
     }
     
     // Filter by venue
     if (!empty($filters['venue'])) {
-        $where[] = 'e.venue_id = ?';
+        $where[] = 'venue_id = ?';
         $bindings[] = (int) $filters['venue'];
     }
     
     $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
     
-    $query = "SELECT e.* FROM events e 
-              LEFT JOIN venues v ON e.venue_id = v.id 
+    $query = "SELECT * FROM events 
               $whereClause 
-              ORDER BY e.date ASC 
+              ORDER BY date ASC 
               LIMIT ? OFFSET ?";
     
     $bindings[] = $limit;
     $bindings[] = $offset;
     
-    return R::getAll($query, $bindings);
+    $rawResults = R::getAll($query, $bindings);
+    
+    // Convert raw arrays to stdClass objects for compatibility with hydrate()
+    $results = [];
+    foreach ($rawResults as $row) {
+        $obj = new \stdClass();
+        foreach ($row as $key => $value) {
+            $obj->$key = $value;
+        }
+        $results[] = $obj;
+    }
+    
+    return $results;
 }
 
 /**
@@ -191,32 +201,29 @@ public function countSearch(array $filters): int
     $where = [];
     $bindings = [];
     
-    // Search by query string (title, description, or venue name)
+    // Search by query string (title or description)
     if (!empty($filters['q'])) {
         $searchTerm = '%' . $filters['q'] . '%';
-        $where[] = '(e.title LIKE ? OR e.description LIKE ? OR v.name LIKE ?)';
-        $bindings[] = $searchTerm;
+        $where[] = '(title LIKE ? OR description LIKE ?)';
         $bindings[] = $searchTerm;
         $bindings[] = $searchTerm;
     }
     
     // Filter by category
     if (!empty($filters['category'])) {
-        $where[] = 'e.category_id = ?';
+        $where[] = 'category_id = ?';
         $bindings[] = (int) $filters['category'];
     }
     
     // Filter by venue
     if (!empty($filters['venue'])) {
-        $where[] = 'e.venue_id = ?';
+        $where[] = 'venue_id = ?';
         $bindings[] = (int) $filters['venue'];
     }
     
     $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
     
-    $query = "SELECT COUNT(*) FROM events e 
-              LEFT JOIN venues v ON e.venue_id = v.id 
-              $whereClause";
+    $query = "SELECT COUNT(*) FROM events $whereClause";
     
     return (int) R::getCell($query, $bindings);
 }
