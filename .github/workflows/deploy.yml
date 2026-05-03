@@ -11,6 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: List cPanel Git Repositories (debug)
+        run: |
+          echo "=== Registered Git Repositories ==="
+          curl -sk \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
+            "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/retrieve" \
+            | python3 -m json.tool || echo "(could not parse JSON)"
+          echo "==================================="
+
       - name: Trigger cPanel Git Deploy via API Token
         run: |
           RESPONSE=$(curl -sk \
@@ -22,7 +31,6 @@ jobs:
           echo "$RESPONSE"
           echo "==========================="
 
-          # Check if response is JSON before parsing
           if echo "$RESPONSE" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
             STATUS=$(echo "$RESPONSE" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('status', 0))")
             if [ "$STATUS" != "1" ]; then
