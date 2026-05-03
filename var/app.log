@@ -708,3 +708,8 @@
 [2026-05-03 17:49:38] GET    /Ticketmaestrix/venues/create → 200  (76ms)
 [2026-05-03 17:51:58] GET    /Ticketmaestrix/venues    → 200  (53ms)
 [2026-05-03 17:52:00] GET    /Ticketmaestrix/venues/4/edit → 200  (149ms)
+[2026-05-03 17:55:38] GET    /Ticketmaestrix/categories → 200  (94ms)
+[2026-05-03 17:57:01] GET    /Ticketmaestrix/categories/7/edit → 200  (61ms)
+[2026-05-03 17:57:21] GET    /Ticketmaestrix/categories/7/edit → 200  (24ms)
+[2026-05-03 17:58:34] GET    /Ticketmaestrix/categories/create → 200  (81ms)
+[2026-05-03 17:58:34] GET    /Ticketmaestrix/categories/create → 200  (24ms)

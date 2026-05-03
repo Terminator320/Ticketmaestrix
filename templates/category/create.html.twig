@@ -1,22 +1,177 @@
-{% extends "base.html.twig" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Category - TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-{% block title %}Create Category - TicketMaestrix{% endblock %}
+        :root { 
+            --brand-purple: #5E246E; 
+            --brand-hover: #4a1d56; 
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
 
-{% block content %}
-<div class="page-header">
-    <h2>Create New Category</h2>
-    <a href="{{ base_path }}/categories" class="btn btn-secondary">Back to Categories</a>
-</div>
+        body { 
+            background-color: #ffffff; 
+            font-family: 'Inter', sans-serif; 
+            color: #1a202c;
+        }
 
-<form action="{{ base_path }}/categories" method="post" class="form">
-    <div class="form-group">
-        <label for="name">Category Name:</label>
-        <input type="text" id="name" name="name" required>
+        /* Admin Header Section */
+        .admin-header {
+            padding: 3rem 0 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+        }
+
+        .btn-purple {
+            background-color: var(--brand-purple) !important;
+            color: white !important;
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 12px 24px;
+            border: none !important;
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-purple:hover {
+            background-color: var(--brand-hover) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+        }
+
+        .btn-mgmt {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-mgmt:hover {
+            border-color: var(--brand-purple);
+            color: var(--brand-purple);
+            background: #fdfaff;
+        }
+
+        /* Form Container Styling */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto 5rem auto;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-control:focus {
+            border-color: var(--brand-purple);
+            box-shadow: 0 0 0 0.25rem rgba(94, 36, 110, 0.1);
+        }
+
+        .input-group-text {
+            background-color: var(--bg-light);
+            border-radius: 10px 0 0 10px;
+            border: 1px solid var(--border-color);
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'partials/navbar.html.twig' %}
+
+    <div class="container">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="row align-items-center">
+                <div class="col-lg-5">
+                    <h1 class="fw-800 display-5 mb-1">New Category</h1>
+                    <p class="text-muted fs-5">Define a new genre or event type.</p>
+                </div>
+                <div class="col-lg-7 text-lg-end mt-4 mt-lg-0">
+                    <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
+                        <a href="{{ base_path }}/events" class="btn-mgmt">
+                            <i class="bi bi-calendar-event me-2"></i> Events
+                        </a>
+                        <a href="{{ base_path }}/tickets" class="btn-mgmt">
+                            <i class="bi bi-ticket-perforated me-2"></i> Tickets
+                        </a>
+                        <a href="{{ base_path }}/venues" class="btn-mgmt">
+                            <i class="bi bi-building me-2"></i> Venues
+                        </a>
+                        <a href="{{ base_path }}/categories" class="btn-mgmt">
+                            <i class="bi bi-arrow-left me-2"></i> Back
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Form Section -->
+        <div class="form-container">
+            <form action="{{ base_path }}/categories" method="post">
+                <div class="row g-4">
+                    
+                    <!-- Category Name -->
+                    <div class="col-12">
+                        <label for="name" class="form-label">Category Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-plus-circle"></i></span>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Music Festivals" required>
+                        </div>
+                        <div class="form-text mt-2">Common categories: Sports, Concerts, Tech, Comedy.</div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-12 mt-5">
+                        <div class="d-flex gap-3 pt-4 border-top">
+                            <button type="submit" class="btn-purple px-5">
+                                <i class="bi bi-check-lg me-2"></i> Create Category
+                            </button>
+                            <a href="{{ base_path }}/categories" class="btn btn-outline-secondary px-5 py-2 fw-bold" style="border-radius: 10px; display: flex; align-items: center;">
+                                Cancel
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
     </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Create Category</button>
-        <a href="{{ base_path }}/categories" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
-{% endblock %}
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

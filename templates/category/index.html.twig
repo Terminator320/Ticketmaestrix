@@ -1,33 +1,220 @@
-{% extends "base.html.twig" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories - TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-{% block title %}Categories - TicketMaestrix{% endblock %}
+        :root { 
+            --brand-purple: #5E246E; 
+            --brand-hover: #4a1d56; 
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
 
-{% block content %}
-<div class="page-header">
-    <h2>Categories</h2>
-    <a href="{{ base_path }}/categories/create" class="btn btn-primary">Add New Category</a>
-</div>
+        body { 
+            background-color: #ffffff; 
+            font-family: 'Inter', sans-serif; 
+            color: #1a202c;
+        }
 
-<div class="grid">
-    {% for category in categories %}
-    <div class="card" data-name="{{ category.name|e('html_attr') }}">
-        <div class="card-header">
-            <h3>{{ category.name|e('html') }}</h3>
-        </div>
-        <div class="card-body">
-            <p><strong>ID:</strong> {{ category.id }}</p>
-        </div>
-        <div class="card-footer">
-            <a href="{{ base_path }}/categories/{{ category.id }}/edit" class="btn btn-secondary">Edit</a>
-            <form action="{{ base_path }}/categories/{{ category.id }}/delete" method="post" style="display:inline;">
-                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this category?')">Delete</button>
-            </form>
+        /* Admin Header Section */
+        .admin-header {
+            padding: 3rem 0 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+        }
+
+        /* Button Styling */
+        .btn-purple {
+            background-color: var(--brand-purple) !important;
+            color: white !important;
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 12px 24px;
+            border: none !important;
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-purple:hover {
+            background-color: var(--brand-hover) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+        }
+
+        .btn-mgmt {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-mgmt:hover {
+            border-color: var(--brand-purple);
+            color: var(--brand-purple);
+            background: #fdfaff;
+        }
+
+        /* Category Card Design */
+        .category-card {
+            border: 1px solid #f0f0f0;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .category-visual {
+            background: var(--brand-purple);
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .category-icon {
+            color: #ffffff !important;
+            font-size: 4rem;
+        }
+
+        .id-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(4px);
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .card-content h3 {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 0;
+            color: #1a202c;
+        }
+
+        .admin-footer {
+            padding: 1.25rem;
+            background: #fafafa;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'partials/navbar.html.twig' %}
+
+    <div class="container">
+        
+        <!-- Admin Dashboard Header -->
+        <header class="admin-header">
+            <div class="row align-items-center">
+                <div class="col-lg-5">
+                    <h1 class="fw-800 display-5 mb-1">Categories</h1>
+                    <p class="text-muted fs-5">Organize your events by genre or type.</p>
+                </div>
+                <div class="col-lg-7 text-lg-end mt-4 mt-lg-0">
+                    <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
+                        <a href="{{ base_path }}/events" class="btn-mgmt">
+                            <i class="bi bi-calendar-event me-2"></i> Events
+                        </a>
+                        <a href="{{ base_path }}/tickets" class="btn-mgmt">
+                            <i class="bi bi-ticket-perforated me-2"></i> Tickets
+                        </a>
+                        <a href="{{ base_path }}/venues" class="btn-mgmt">
+                            <i class="bi bi-building me-2"></i> Venues
+                        </a>
+                        <a href="{{ base_path }}/categories/create" class="btn-purple ms-lg-2">
+                            <i class="bi bi-plus-lg me-2"></i> Add New Category
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Categories Grid -->
+        <div class="row g-4 mb-5">
+            {% for category in categories %}
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <article class="category-card" data-name="{{ category.name|e('html_attr') }}">
+                    
+                    <!-- Header Visual -->
+                    <div class="category-visual">
+                        <span class="id-badge">ID: {{ category.id }}</span>
+                        <i class="bi bi-tags-fill category-icon"></i>
+                    </div>
+                    
+                    <!-- Info Content -->
+                    <div class="card-content">
+                        <h3>{{ category.name|e('html') }}</h3>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="admin-footer">
+                        <a href="{{ base_path }}/categories/{{ category.id }}/edit" class="btn btn-sm btn-outline-secondary px-3 rounded-pill fw-bold">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                        
+                        <form action="{{ base_path }}/categories/{{ category.id }}/delete" method="post" class="m-0" onsubmit="return confirm('Delete this category?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-pill fw-bold">
+                                <i class="bi bi-trash3"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="py-5">
+                    <i class="bi bi-tags display-1 text-light mb-4"></i>
+                    <p class="text-muted fs-4">No categories found in the system.</p>
+                    <a href="{{ base_path }}/categories/create" class="btn-purple mt-2">Add Your First Category</a>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
-    {% else %}
-    <div class="empty-state">
-        <p>No categories found. <a href="{{ base_path }}/categories/create">Add the first category</a>.</p>
-    </div>
-    {% endfor %}
-</div>
-{% endblock %}
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
