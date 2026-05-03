@@ -3,55 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tickets - TicketMaestrix</title>
+    <title>Available Tickets - TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <style>
-        :root { --brand-purple: #5E246E; }
-        body { background-color: #F8F9FA; }
-        .ticket-row { border-left: 4px solid var(--brand-purple); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        :root { 
+            --brand-purple: #5E246E; 
+            --brand-hover: #4a1d56;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            background-color: #ffffff; 
+            font-family: 'Inter', sans-serif; 
+            color: #1a202c;
+        }
+
+        /* Header Section */
+        .admin-header {
+            padding: 3rem 0 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+        }
+
+        .btn-mgmt {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-mgmt:hover {
+            border-color: var(--brand-purple);
+            color: var(--brand-purple);
+            background: #fdfaff;
+        }
+
+        /* Ticket Card Design (Matching image_fb7002.png) */
+        .ticket-card {
+            border: 1px solid #f0f0f0;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ticket-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .ticket-visual {
+            background: var(--brand-purple);
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .ticket-icon {
+            color: #ffffff !important;
+            font-size: 4rem;
+        }
+
+        .price-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ffffff;
+            color: var(--brand-purple);
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .card-footer {
+            padding: 1.25rem;
+            background: #fafafa;
+            border-top: 1px solid #f1f5f9;
+            text-align: center;
+        }
+
+        .btn-view {
+            color: var(--brand-purple);
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-view:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+
     {% include 'partials/navbar.html.twig' %}
 
-    <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <a href="{{ base_path }}/events/{{ event_id }}" class="text-decoration-none text-muted small">
-                    <i class="bi bi-arrow-left"></i> Back to Event
-                </a>
-                <h4 class="fw-bold mb-0 mt-2">
-                    <i class="bi bi-ticket-perforated me-2" style="color:var(--brand-purple)"></i>
-                    Available Tickets
-                </h4>
+    <div class="container">
+        
+        <header class="admin-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <a href="{{ base_path }}/events/{{ event_id }}" class="btn-view text-muted mb-2 d-inline-block">
+                        <i class="bi bi-arrow-left"></i> Back to Event Details
+                    </a>
+                    <h1 class="fw-800 h2 mb-1">Available Tickets</h1>
+                    <p class="text-muted mb-0">Managing seats for Event #{{ event_id }}</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                        {{ tickets|length }} Total Tickets
+                    </span>
+                </div>
             </div>
-            <span class="text-muted small">{{ tickets|length }} ticket(s)</span>
-        </div>
+        </header>
 
         {% if tickets is empty %}
-        <div class="text-center py-5 text-muted">
-            <i class="bi bi-ticket-perforated display-4 d-block mb-3"></i>
-            No tickets available for this event.
+        <div class="text-center py-5">
+            <div class="py-5">
+                <i class="bi bi-ticket-perforated display-1 text-light mb-4"></i>
+                <p class="text-muted fs-4">No tickets have been generated for this event yet.</p>
+                <a href="{{ base_path }}/tickets/create" class="btn-mgmt">
+                    <i class="bi bi-plus-lg me-2"></i> Create Tickets
+                </a>
+            </div>
         </div>
         {% else %}
-        <div class="row g-3">
+        <div class="row g-4 mb-5">
             {% for ticket in tickets %}
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 ticket-row">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold">Row {{ ticket.row }} — Seat {{ ticket.seat }}</div>
-                            <small class="text-muted">Ticket #{{ ticket.id }}</small>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="fw-bold" style="color:var(--brand-purple)">${{ ticket.price }}</span>
-                            <a href="{{ base_path }}/tickets/{{ ticket.id }}" class="btn btn-sm btn-outline-secondary">
-                                View
-                            </a>
-                        </div>
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <article class="ticket-card">
+                    <div class="ticket-visual">
+                        <span class="price-badge">${{ ticket.price }}</span>
+                        <i class="bi bi-ticket-perforated-fill ticket-icon"></i>
                     </div>
-                </div>
+                    
+                    <div class="card-content">
+                        <h3 class="h6 fw-bold mb-1">Row {{ ticket.row }} — Seat {{ ticket.seat }}</h3>
+                        <p class="small text-muted mb-0">ID: #{{ ticket.id }}</p>
+                    </div>
+
+                    <div class="card-footer">
+                        <a href="{{ base_path }}/tickets/{{ ticket.id }}" class="btn-view">
+                            View Ticket <i class="bi bi-chevron-right small"></i>
+                        </a>
+                    </div>
+                </article>
             </div>
             {% endfor %}
         </div>
