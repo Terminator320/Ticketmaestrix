@@ -18,9 +18,9 @@ jobs:
           username: ${{ secrets.CPANEL_SSH_USER }}
           key: ${{ secrets.CPANEL_SSH_KEY }}
           script: |
-            cd ~/repositories/ticketmaestrix   # path to your cPanel-tracked repo
+            cd ~/repositories/Ticketmaestrix   # path to your cPanel-tracked repo
             git pull origin main
             /usr/local/cpanel/bin/uapi \
               --user=$USER \
               VersionControl update \
-              repository_root=$HOME/repositories/ticketmaestrix
+              repository_root=$HOME/repositories/Ticketmaestrix
