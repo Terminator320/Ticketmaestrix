@@ -1,25 +1,9 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=$HOME/public_html/
-    - /usr/bin/rsync -av --delete
-        --exclude='.git/'
-        --exclude='.github/'
-        --exclude='.gitignore'
-        --exclude='.gitattributes'
-        --exclude='.cpanel.yml'
-        --exclude='.env'
-        --exclude='.env.*'
-        --exclude='node_modules/'
-        --exclude='package.json'
-        --exclude='package-lock.json'
-        --exclude='update.bat'
-        --exclude='README.md'
-        --exclude='LICENSE'
-        --exclude='.well-known/'
-        --exclude='var/'
-        ./ $DEPLOYPATH
-    - find $DEPLOYPATH -not -path "$DEPLOYPATH/var*" -type f -exec chmod 644 {} \;
-    - find $DEPLOYPATH -not -path "$DEPLOYPATH/var*" -type d -exec chmod 755 {} \;
-    - mkdir -p $DEPLOYPATH/var && chmod 700 $DEPLOYPATH/var
-    - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader --no-interaction
+    - /usr/bin/rsync -av --delete --exclude='.git/' --exclude='.github/' --exclude='.gitignore' --exclude='.gitattributes' --exclude='.cpanel.yml' --exclude='.env' --exclude='.env.*' --exclude='node_modules/' --exclude='package.json' --exclude='package-lock.json' --exclude='update.bat' --exclude='README.md' --exclude='LICENSE' --exclude='.well-known/' --exclude='var/' ./ $HOME/public_html/
+    - chmod 755 $HOME/public_html
+    - find $HOME/public_html -not -path "$HOME/public_html/var*" -type f -exec chmod 644 {} \;
+    - find $HOME/public_html -not -path "$HOME/public_html/var*" -type d -exec chmod 755 {} \;
+    - mkdir -p $HOME/public_html/var && chmod 700 $HOME/public_html/var
+    - cd $HOME/public_html && composer install --no-dev --optimize-autoloader --no-interaction
