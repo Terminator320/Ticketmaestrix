@@ -17,8 +17,10 @@ jobs:
           host: ${{ secrets.CPANEL_HOST }}
           username: ${{ secrets.CPANEL_SSH_USER }}
           key: ${{ secrets.CPANEL_SSH_KEY }}
+          passphrase:
+          port: ${{ secrets.CPANEL_SSH_PORT }}
           script: |
-            cd ~/repositories/Ticketmaestrix   # path to your cPanel-tracked repo
+            cd ~/repositories/Ticketmaestrix 
             git pull origin main
             /usr/local/cpanel/bin/uapi \
               --user=$USER \
