@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger cPanel Git Deploy via HTTPS API
+      - name: Trigger cPanel Git Deploy via API Token
         run: |
           RESPONSE=$(curl -sk \
-            -u "${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_PASSWORD }}" \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
             "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/update" \
             --data-urlencode "repository_root=/home/${{ secrets.CPANEL_USER }}/repositories/Ticketmaestrix")
 
