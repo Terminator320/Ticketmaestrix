@@ -8,35 +8,19 @@ on:
 
 jobs:
   deploy:
-    name: Pull + deploy on cPanel over SSH
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    concurrency:
-      group: cpanel-deploy
-      cancel-in-progress: false
 
     steps:
-      - name: Trigger cPanel deployment
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Deploy via SSH to cPanel
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.CPANEL_HOST }}
-          username: ${{ secrets.CPANEL_USERNAME }}
+          host: ${{ secrets.CPANEL_SSH_HOST }}
+          username: ${{ secrets.CPANEL_SSH_USER }}
           key: ${{ secrets.CPANEL_SSH_KEY }}
-          port: ${{ secrets.CPANEL_SSH_PORT }}
-          script_stop: true
           script: |
-            set -e
-            REPO_DIR="$HOME/repositories/${{ secrets.CPANEL_REPO_NAME }}"
-
-            if [ ! -d "$REPO_DIR/.git" ]; then
-              echo "Missing cPanel-managed repo at $REPO_DIR"
-              exit 1
-            fi
-
-            echo "==> Syncing repo at $REPO_DIR"
-            cd "$REPO_DIR"
-            git fetch origin main --prune
-            git reset --hard origin/main
-
-            echo "==> Triggering cPanel .cpanel.yml deployment"
-            uapi --output=json VersionControlDeployment create repository_root="$REPO_DIR"
+            cd ~/repositories/ticketmaestrix   # path to your cPanel-tracked repo
+            git pull origin main
+            /usr/local/cpanel/bin/uapi \
+              --user=$USER \
+              VersionControl update \
+              repository_root=$HOME/repositories/ticketmaestrix
