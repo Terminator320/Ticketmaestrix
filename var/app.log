@@ -968,3 +968,4 @@
 [2026-05-04 00:18:18] GET    /Ticketmaestrix/events/16 → 200  (29ms)
 [2026-05-04 00:18:20] GET    /Ticketmaestrix/tickets/event/16 → 200  (134ms)
 [2026-05-04 00:18:20] GET    /Ticketmaestrix/tickets/event/16 → 200  (24ms)
+[2026-05-04 01:50:15] GET    /Ticketmaestrix/          → 500  (370ms)
