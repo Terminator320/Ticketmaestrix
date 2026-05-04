@@ -12,6 +12,7 @@ jobs:
   check:
     name: Check cPanel database connection
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     steps:
@@ -35,6 +36,11 @@ jobs:
             fi
 
             cd "$APP_DIR"
+
+            if [ ! -f "index.php" ]; then
+              echo "Missing index.php in $APP_DIR"
+              exit 1
+            fi
 
             if [ ! -f ".env" ]; then
               echo "Missing .env in $APP_DIR"
@@ -60,6 +66,8 @@ jobs:
               echo "PHP was not found on the cPanel account."
               exit 1
             fi
+
+            "$PHP_BIN" -l "$APP_DIR/index.php"
 
             "$PHP_BIN" <<'PHP'
             <?php
@@ -109,3 +117,10 @@ jobs:
                 exit(1);
             }
             PHP
+
+            LATEST_LOG="$(ls -1t "$HOME/.cpanel/logs"/vc_*_git_deploy.log 2>/dev/null | head -n 1 || true)"
+
+            if [ -n "$LATEST_LOG" ]; then
+              echo "Latest deploy log: $LATEST_LOG"
+              tail -n 20 "$LATEST_LOG"
+            fi

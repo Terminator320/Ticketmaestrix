@@ -102,7 +102,12 @@ $twig->addGlobal('current_locale', $_SESSION['lang'] ?? 'en');
 
 
 // ============== DEPENDENCY INJECTION CONTAINER ==============
-$basePath = '/Ticketmaestrix';
+//   PHP-DI container wires dependencies together.
+//   Each controller receives Twig\Environment, its model(s), and the base path
+//   through its constructor instead of pulling them from global scope.
+
+$basePath = $_ENV['APP_BASE_PATH'] ?? '';
+
 
 $container = new \DI\Container();
 $container->set(Environment::class, $twig);
@@ -203,7 +208,12 @@ $app = AppFactory::create();
 $app->setBasePath($basePath);
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
-$app->addErrorMiddleware(true, true, true);
+
+// Add error middleware so you get useful error pages instead of blank screens
+// $app->addErrorMiddleware(true, true, true);
+
+$debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+$app->addErrorMiddleware($debug, true, true);
 
 // ============== MIDDLEWARE ==============
 
