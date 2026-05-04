@@ -55,6 +55,12 @@ class AuthController
 
         if ($user && $user->id && password_verify($password, $user->password)) {
             $_SESSION['pending_user_id'] = (int) $user->id;
+            if (empty($user->totp_secret)) {
+                $_SESSION['2fa_setup_pending_user_id'] = (int) $user->id;
+                return $response
+                    ->withHeader('Location', $this->basePath . '/2fa/setup')
+                    ->withStatus(302);
+            }
             return $response
                 ->withHeader('Location', $this->basePath . '/2fa/login')
                 ->withStatus(302);
@@ -93,7 +99,9 @@ class AuthController
     public function show2faSetup(Request $request, Response $response): Response
     {
         $signupData = $_SESSION['signup_user_data'] ?? null;
-        if (!$signupData) {
+        $pendingUserId = $_SESSION['2fa_setup_pending_user_id'] ?? null;
+
+        if (!$signupData && !$pendingUserId) {
             return $response
                 ->withHeader('Location', $this->basePath . '/signup')
                 ->withStatus(302);
@@ -104,8 +112,17 @@ class AuthController
             $qrCode = $cached['qr_code'];
             $secret = $cached['secret'];
         } else {
-            $email = $signupData['email'];
-            $result = $this->otpService->generate($email, $signupData);
+            $email = $pendingUserId
+                ? $this->users->load($pendingUserId)->email
+                : $signupData['email'];
+
+            $label = $email;
+            if ($pendingUserId) {
+                $result = $this->otpService->generateForExisting($pendingUserId, $label);
+            } else {
+                $result = $this->otpService->generate($label, $signupData);
+            }
+
             $qrCode = $result['qr_code'];
             $secret = $result['secret'];
             $_SESSION['2fa_setup_data'] = [
@@ -131,7 +148,9 @@ class AuthController
     public function verify2faSetup(Request $request, Response $response): Response
     {
         $signupData = $_SESSION['signup_user_data'] ?? null;
-        if (!$signupData) {
+        $pendingUserId = $_SESSION['2fa_setup_pending_user_id'] ?? null;
+
+        if (!$signupData && !$pendingUserId) {
             return $response
                 ->withHeader('Location', $this->basePath . '/signup')
                 ->withStatus(302);
@@ -139,6 +158,19 @@ class AuthController
 
         $data = $request->getParsedBody();
         $otp  = (string) ($data['otp'] ?? '');
+
+        if ($pendingUserId) {
+            if (!$this->otpService->verify($pendingUserId, $otp)) {
+                $_SESSION['2fa_setup_error'] = 'Invalid code. Please try again.';
+                return $response
+                    ->withHeader('Location', $this->basePath . '/2fa/setup')
+                    ->withStatus(302);
+            }
+            unset($_SESSION['2fa_setup_pending_user_id']);
+            return $response
+                ->withHeader('Location', $this->basePath . '/2fa/login')
+                ->withStatus(302);
+        }
 
         $user = $this->users->findByEmail($signupData['email']);
         if (!$user || !$this->otpService->verify((int) $user->id, $otp)) {

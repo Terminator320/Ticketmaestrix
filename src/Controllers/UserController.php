@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Helpers\Auth;
 use App\Models\OrderModel;
+use App\Models\PointsHistoryModel;
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -18,11 +19,12 @@ use Twig\Environment;
 class UserController
 {
     public function __construct(
-        private Environment $twig,
-        private UserModel   $userModel,
-        private TicketModel $ticketModel,
-        private OrderModel  $orderModel,
-        private string      $basePath,
+        private Environment       $twig,
+        private UserModel         $userModel,
+        private TicketModel       $ticketModel,
+        private OrderModel        $orderModel,
+        private PointsHistoryModel $pointsHistoryModel,
+        private string            $basePath,
     ) {}
 
     /** POST /users — create a new user (admin form). */
@@ -147,6 +149,7 @@ class UserController
             'tickets_count'   => $this->ticketModel->countByOrderItemsForUser($id),
             'total_spent'     => number_format($this->orderModel->totalSpentByUser($id), 2, '.', ''),
             'events_attended' => $this->orderModel->eventsAttendedByUser($id),
+            'points_history'  => $this->pointsHistoryModel->findByUser($id),
         ]);
 
         $response->getBody()->write($html);
