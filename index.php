@@ -78,18 +78,6 @@ $twig->addGlobal('current_user', Auth::user());
 $twig->addGlobal('is_admin',     Auth::isAdmin());
 $twig->addGlobal('cart_count',   Cart::count());
 
-// ============== I18N ==============
-$translator = new Translator('en');
-
-$translator->addLoader('array', new ArrayLoader('/translations'));
-
-$translator->addResource('array', require __DIR__ . '/translations/messages.en.php', 'en');
-$translator->addResource('array', require __DIR__ . '/translations/messages.fr.php', 'fr');
-
-$twig->addFunction(new TwigFunction('trans', function (string $key, array $params = []) use ($translator) {
-     $locale = $_SESSION['lang'] ?? 'en';
-    return $translator->trans($key, $params, null, $locale);
-}));
 
 
 // ============== DEPENDENCY INJECTION CONTAINER ==============
@@ -338,22 +326,6 @@ $app->group('/cart', function ($group) {
     $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
     $group->post('/clear',                [CartController::class, 'clear']);
     $group->post('/checkout',             [CartController::class, 'checkout']);
-});
-
-// ─── 8. LANGUAGE ROUTE ────────────────────────────────────────────────────────
-
-$app->get('/lang/{locale}', function (Request $request, Response $response, array $args) use ($basePath) {
-    $allowed = ['en', 'fr'];
-
-    // TODO (Part 1, Step 3): If $args['locale'] is in $allowed, store it in $_SESSION['lang'].
-    //   Then redirect to $basePath . '/todos' with status 302.
-
-    if(in_array($args['locale'], $allowed)) {
-        $_SESSION['lang'] = $args['locale'];
-        return $response->withHeader('Location', $basePath . '/todos')->withStatus(302);
-    }
-
-    return $response->withStatus(404);
 });
 
 
