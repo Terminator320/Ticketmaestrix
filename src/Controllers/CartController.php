@@ -42,8 +42,7 @@ class CartController
 
         Cart::add($ticketId, max(1, $qty));
 
-        $response->getBody()->write(json_encode(['success' => true, 'cart_count' => Cart::count(), 'message' => 'Ticket added to cart!']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
     }
 
     /** POST /cart/remove/{ticket_id} — remove a single line. */
@@ -67,6 +66,19 @@ class CartController
     }
 
     /**
+     * POST /cart/expire — called by the client-side countdown when the timer
+     * hits zero. Clears the cart and sends the user back to browse events.
+     */
+    public function expire(Request $request, Response $response): Response
+    {
+        Cart::clear();
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/events')
+            ->withStatus(302);
+    }
+
+    /**
      * POST /cart/checkout — convert the session cart into a real order.
      *
      * Login is required. Creates one orders row (status=1, paid) and one
@@ -81,6 +93,9 @@ class CartController
         if ($redirect = Auth::requireLogin($response, $this->basePath)) {
             return $redirect;
         }
+
+        // Reject an expired cart before touching the DB.
+        Cart::checkExpiry();
 
         $rows = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
         if (count($rows) === 0) {

@@ -55,6 +55,8 @@ $dotenv->load();
 // Bootstraps PHP sessions so Auth + Cart helpers can read/write $_SESSION.
 // Must run before any output and before the DI container builds controllers
 // that may consult Auth during construction.
+// cookie_lifetime=0 means the PHPSESSID cookie expires when the browser closes.
+ini_set('session.cookie_lifetime', '0');
 session_start();
 
 
@@ -77,9 +79,11 @@ $twig   = new Environment($loader, [
 
 // Twig globals — exposed to every template so the navbar (and any other
 // partial) can render auth-aware UI without each controller passing them.
-$twig->addGlobal('current_user', Auth::user());
-$twig->addGlobal('is_admin',     Auth::isAdmin());
-$twig->addGlobal('cart_count',   Cart::count());
+$twig->addGlobal('current_user',    Auth::user());
+$twig->addGlobal('is_admin',        Auth::isAdmin());
+$twig->addGlobal('cart_count',      Cart::count());
+// Unix timestamp so the JS can compute seconds-remaining without server drift.
+$twig->addGlobal('cart_expires_at', (int) ($_SESSION['cart_expires_at'] ?? 0));
 
 
 
@@ -357,6 +361,7 @@ $app->group('/cart', function ($group) {
     $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
     $group->post('/clear',                [CartController::class, 'clear']);
     $group->post('/checkout',             [CartController::class, 'checkout']);
+    $group->post('/expire',               [CartController::class, 'expire']);
 });
 
 

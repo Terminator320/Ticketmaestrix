@@ -80,15 +80,13 @@ class UserController
     public function delete(Request $request, Response $response, array $args): Response
     {
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Unauthorized operation']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            return $redirect;
         }
         $userId = (int) ($args['id'] ?? 0);
 
         $this->userModel->delete($userId);
 
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'User successfully deleted']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/users')->withStatus(302);
     }
 
     /** GET /users/{id} — admin views one user's detail page. */
