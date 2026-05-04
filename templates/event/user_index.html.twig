@@ -111,8 +111,8 @@
     <!-- Hero Section -->
     <section class="events-hero">
         <div class="container">
-            <h1>Discover Amazing Events Near You</h1>
-            <p>From concerts to movies, sports to theater - find and book tickets for unforgettable experiences</p>
+            <h1>{{ 'discover_events'|trans }}</h1>
+            <p>{{ 'hero_subtitle'|trans }}</p>
         </div>
     </section>
 
@@ -127,13 +127,13 @@
                         </span>
                         <!-- Query param 'q' linked to your backend logic -->
                         <input type="text" name="q" class="form-control border-start-0" 
-                               placeholder="Search for events, artists, or venues" 
+                               placeholder="{{ 'search_placeholder'|trans }}" 
                                value="{{ query_params.q|default('') }}">
                     </div>
                 </div>
                 <div class="col-lg-3">
                     <select name="category" class="form-select h-100">
-                        <option value="">All Categories</option>
+                        <option value="">{{ 'all_categories'|trans }}</option>
                         {% for cat in categories %}
                             <option value="{{ cat.id }}" {{ query_params.category == cat.id ? 'selected' : '' }}>{{ cat.name }}</option>
                         {% endfor %}
@@ -141,7 +141,7 @@
                 </div>
                 <div class="col-lg-2">
                     <select name="venue" class="form-select h-100">
-                        <option value="">All Venues</option>
+                        <option value="">{{ 'all_venues'|trans }}</option>
                         {% for v in venues %}
                             <option value="{{ v.id }}" {{ query_params.venue == v.id ? 'selected' : '' }}>{{ v.name }}</option>
                         {% endfor %}
@@ -149,7 +149,7 @@
                 </div>
                 <div class="col-lg-2">
                     <button type="submit" class="btn btn-filter py-2">
-                        Search
+                        {{ 'search_button'|trans }}
                     </button>
                 </div>
             </form>
@@ -158,7 +158,7 @@
 
     <div class="container mb-5">
         <div class="mb-4">
-            <h2 class="section-title">Upcoming Events</h2>
+            <h2 class="section-title">{{ 'upcoming_events'|trans }}</h2>
         </div>
 
         <div class="row g-4 mt-2">
@@ -172,7 +172,7 @@
             {% else %}
             <div class="col-12 text-center py-5">
                 <div class="border-2 border-dashed border-secondary p-5 bg-white">
-                    <h4 class="text-muted mb-0">No events found matching your search.</h4>
+                    <h4 class="text-muted mb-0">{{ 'no_events_found'|trans }}</h4>
                 </div>
             </div>
             {% endfor %}
