@@ -23,9 +23,19 @@ class Cart
         if ($ticketId <= 0 || $qty <= 0) {
             return;
         }
+
+        // Wipe a stale cart before adding so the old items don't carry over.
+        self::checkExpiry();
+
+        $wasEmpty = empty($_SESSION['cart'] ?? []);
         $cart = $_SESSION['cart'] ?? [];
         $cart[$ticketId] = ($cart[$ticketId] ?? 0) + $qty;
         $_SESSION['cart'] = $cart;
+
+        // Start the 5-minute window on the very first ticket added.
+        if ($wasEmpty) {
+            $_SESSION['cart_expires_at'] = time() + 300;
+        }
     }
 
     /** Remove a single ticket id entirely (regardless of quantity). */
@@ -37,10 +47,11 @@ class Cart
         unset($_SESSION['cart'][$ticketId]);
     }
 
-    /** Empty the cart completely. */
+    /** Empty the cart and its expiry timestamp completely. */
     public static function clear(): void
     {
         unset($_SESSION['cart']);
+        unset($_SESSION['cart_expires_at']);
     }
 
     /** Raw [ticket_id => qty] map. */
@@ -49,9 +60,33 @@ class Cart
         return $_SESSION['cart'] ?? [];
     }
 
+    /** Returns true if a cart expiry is set and has passed. */
+    public static function isExpired(): bool
+    {
+        return isset($_SESSION['cart_expires_at']) && time() > $_SESSION['cart_expires_at'];
+    }
+
+    /**
+     * Clears the cart if the 5-minute window has expired.
+     * Call this at the top of any method that reads or writes cart state.
+     */
+    public static function checkExpiry(): void
+    {
+        if (self::isExpired()) {
+            self::clear();
+        }
+    }
+
+    /** Seconds until the cart expires. Returns 0 if no expiry is set or already past. */
+    public static function secondsRemaining(): int
+    {
+        return max(0, (int) (($_SESSION['cart_expires_at'] ?? 0) - time()));
+    }
+
     /** Total number of tickets across all lines (for navbar badge). */
     public static function count(): int
     {
+        self::checkExpiry();
         return array_sum(self::items());
     }
 
@@ -68,6 +103,7 @@ class Cart
         EventModel  $events,
         VenueModel  $venues
     ): array {
+        self::checkExpiry();
         $rows = [];
         foreach (self::items() as $ticketId => $qty) {
             $ticket = $tickets->getById((int) $ticketId);

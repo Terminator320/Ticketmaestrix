@@ -79,29 +79,24 @@ class AdminController
     }
 
     public function createAdmin(Request $request, Response $response): Response
-{
-    if (!Auth::isAdmin()) {
-        $response->getBody()->write(json_encode(['success' => false, 'message' => 'Unauthorized']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+    {
+        if (!Auth::isAdmin()) {
+            return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
+        }
+
+        $data = $request->getParsedBody();
+
+        $this->userModel->create([
+            'first_name'   => $data['first_name'] ?? '',
+            'last_name'    => $data['last_name'] ?? '',
+            'email'        => $data['email'] ?? '',
+            'password'     => $data['password'] ?? '',
+            'phone_number' => $data['phone_number'] ?? '',
+            'role'         => 'admin',
+        ]);
+
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
-
-    $data = $request->getParsedBody();
-    
-    $newAdmin = $this->userModel->create([
-        'first_name'   => $data['first_name'] ?? '',
-        'last_name'    => $data['last_name'] ?? '',
-        'email'        => $data['email'] ?? '',
-        'password'     => $data['password'] ?? '',
-        'phone_number' => $data['phone_number'] ?? '',
-        'role'         => 'admin',
-    ]);
-
-    $response->getBody()->write(json_encode([
-        'success' => true, 
-        'admin'   => $newAdmin
-    ]));
-    return $response->withHeader('Content-Type', 'application/json');
-}
 
     /**
      * POST /admin/users/{id}/edit — Process the admin update via AJAX
@@ -129,20 +124,17 @@ class AdminController
 
         $this->userModel->update($adminId, $updateData);
 
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Admin updated successfully']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 
     public function deleteAdmin(Request $request, Response $response, array $args): Response
-{
-    if (!Auth::isAdmin() || (int)$args['id'] === Auth::user()->id) {
-        $response->getBody()->write(json_encode(['success' => false, 'message' => 'Unauthorized or cannot delete yourself']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+    {
+        if (!Auth::isAdmin() || (int)$args['id'] === Auth::user()->id) {
+            return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
+        }
+
+        $this->userModel->delete((int)$args['id']);
+
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
-
-    $this->userModel->delete((int)$args['id']);
-
-    $response->getBody()->write(json_encode(['success' => true, 'message' => 'Admin successfully deleted']));
-    return $response->withHeader('Content-Type', 'application/json');
-}
 }

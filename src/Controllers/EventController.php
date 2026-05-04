@@ -109,8 +109,7 @@ class EventController
             (int) ($data['category_id'] ?? 0),
             (string) ($data['event_image'] ?? ''),
         );
-        $response->getBody()->write(json_encode(['success' => true, 'event' => $newEvent, 'message' => 'Event created']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 
     public function edit(Request $request, Response $response, array $args): Response
@@ -153,8 +152,7 @@ class EventController
             $this->eventModel->save($event);
         }
 
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Event updated']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/events/' . $id . '/edit')->withStatus(302);
     }
 
     public function destroy(Request $request, Response $response, array $args): Response
@@ -166,8 +164,7 @@ class EventController
         if ($event->id) {
             $this->eventModel->delete($event);
         }
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Event deleted']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 
     public function viewDetails(Request $request, Response $response, array $args): Response

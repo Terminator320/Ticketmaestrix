@@ -50,15 +50,15 @@ class TicketController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $data = $request->getParsedBody();
-        $newTicket = $this->ticketModel->create(
+        $data    = $request->getParsedBody();
+        $eventId = (int) ($data['event_id'] ?? 0);
+        $this->ticketModel->create(
             (float) ($data['price'] ?? 0),
             (string) ($data['seat'] ?? ''),
             (string) ($data['row'] ?? ''),
-            (int) ($data['event_id'] ?? 0),
+            $eventId,
         );
-        $response->getBody()->write(json_encode(['success' => true, 'ticket' => $newTicket, 'message' => 'Ticket created']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/events/' . $eventId . '/tickets')->withStatus(302);
     }
 
     public function edit(Request $request, Response $response, array $args): Response
@@ -98,8 +98,7 @@ class TicketController
             $this->ticketModel->save($ticket);
         }
 
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Ticket updated']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/tickets/' . $id . '/edit')->withStatus(302);
     }
 
     public function destroy(Request $request, Response $response, array $args): Response
@@ -111,8 +110,7 @@ class TicketController
         if ($ticket->id) {
             $this->ticketModel->delete($ticket);
         }
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Ticket deleted']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 
     public function viewDetails(Request $request, Response $response, array $args): Response

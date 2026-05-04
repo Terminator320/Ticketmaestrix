@@ -33,7 +33,7 @@
                         <i class="bi bi-cart3"></i>
                         <span class="d-md-none">Cart</span>
                         {% if cart_count and cart_count > 0 %}
-                            <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem;">{{ cart_count }}</span>
+                            <span id="cart-badge" class="badge bg-danger rounded-pill" style="font-size: 0.6rem; transition: opacity 0.4s ease;">{{ cart_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -96,6 +96,8 @@
         </div>
     </div>
 </nav>
+
+{% include 'partials/cart_expiry_flash.html.twig' %}
 
 <style>
     .navbar-brand {

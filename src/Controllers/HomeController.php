@@ -68,16 +68,20 @@ class HomeController
      */
     public function showCart(Request $request, Response $response): Response
     {
+        // Expire stale cart before rendering so the empty-cart state shows immediately.
+        Cart::checkExpiry();
+
         $cart     = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
         $subtotal = Cart::subtotal($cart);
 
         $html = $this->twig->render('home/cart.html.twig', [
-            'base_path'     => $this->basePath,
-            'current_route' => 'cart',
-            'cart'          => $cart,
-            'subtotal'      => $subtotal,
-            'total'         => $subtotal, // no service fee yet
-            'points_earned' => (int) floor($subtotal * 0.10),
+            'base_path'         => $this->basePath,
+            'current_route'     => 'cart',
+            'cart'              => $cart,
+            'subtotal'          => $subtotal,
+            'total'             => $subtotal, // no service fee yet
+            'points_earned'     => (int) floor($subtotal * 0.10),
+            'seconds_remaining' => Cart::secondsRemaining(),
         ]);
 
         $response->getBody()->write($html);
