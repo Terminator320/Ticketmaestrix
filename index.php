@@ -29,6 +29,7 @@ use App\Models\OrderModel;
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\VenueModel;
+use App\Services\OtpService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -139,6 +140,7 @@ $container->set(CartController::class, fn() => new CartController(
 $container->set(AuthController::class, fn() => new AuthController(
     $twig,
     new UserModel(),
+    new OtpService(new UserModel()),
     $basePath,
 ));
 
@@ -270,6 +272,10 @@ $app->group('', function ($group) {
     $group->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
     $group->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
     $group->get('/newpassword',      [AuthController::class, 'showNewPassword']);
+    $group->get('/2fa/setup',        [AuthController::class, 'show2faSetup']);
+    $group->post('/2fa/setup',       [AuthController::class, 'verify2faSetup']);
+    $group->get('/2fa/login',        [AuthController::class, 'show2faLogin']);
+    $group->post('/2fa/login',       [AuthController::class, 'verify2faLogin']);
 });
 
 // --- Admin ---

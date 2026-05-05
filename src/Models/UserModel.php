@@ -37,11 +37,10 @@ class UserModel
         $bean->first_name   = $data['first_name'];
         $bean->last_name    = $data['last_name'];
         $bean->email        = $data['email'];
-        // Passwords should be hashed before hitting the model ideally, 
-        // but keeping your structure consistent here:
         $bean->password     = password_hash($data['password'], PASSWORD_DEFAULT);
         $bean->phone_number = $data['phone_number'] ?? null;
         $bean->role         = $data['role'] ?? 'user';
+        $bean->totp_secret  = $data['totp_secret'] ?? null;
         R::store($bean);
         return BeanHelper::castBeanProperties($bean);
     }
@@ -95,11 +94,11 @@ class UserModel
     public function delete(int $id): void
 {
     // R::load finds the 'user' bean by its primary key ID
-    $user = \RedBeanPHP\R::load('users', $id);
+    $user = R::load('users', $id);
     
     // If the user exists (id > 0), delete it from the database
     if ($user->id) {
-        \RedBeanPHP\R::trash($user);
+        R::trash($user);
     }
 }
 
