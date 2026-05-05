@@ -50,7 +50,27 @@ class TicketController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $data    = $request->getParsedBody();
+
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        if (empty($data['price']))    $errors['price']    = ['Price is required.'];
+        elseif (!is_numeric($data['price']) || (float)$data['price'] <= 0) $errors['price'] = ['Price must be a positive number.'];
+        if (empty($data['seat']))     $errors['seat']     = ['Seat is required.'];
+        if (empty($data['row']))      $errors['row']      = ['Row is required.'];
+        if (empty($data['event_id'])) $errors['event_id'] = ['Please select an event.'];
+
+        if ($errors) {
+            $html = $this->twig->render('ticket/create.html.twig', [
+                'base_path' => $this->basePath,
+                'events'    => $this->eventModel->getAll(),
+                'errors'    => $errors,
+                'input'     => $data,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
         $eventId = (int) ($data['event_id'] ?? 0);
         $this->ticketModel->create(
             (float) ($data['price'] ?? 0),
@@ -58,6 +78,7 @@ class TicketController
             (string) ($data['row'] ?? ''),
             $eventId,
         );
+
         return $response->withHeader('Location', $this->basePath . '/events/' . $eventId . '/tickets')->withStatus(302);
     }
 
@@ -86,8 +107,30 @@ class TicketController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $id     = (int) $args['id'];
-        $data   = $request->getParsedBody();
+
+        $id   = (int) $args['id'];
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        if (empty($data['price']))    $errors['price']    = ['Price is required.'];
+        elseif (!is_numeric($data['price']) || (float)$data['price'] <= 0) $errors['price'] = ['Price must be a positive number.'];
+        if (empty($data['seat']))     $errors['seat']     = ['Seat is required.'];
+        if (empty($data['row']))      $errors['row']      = ['Row is required.'];
+        if (empty($data['event_id'])) $errors['event_id'] = ['Please select an event.'];
+
+        if ($errors) {
+            $ticket = $this->ticketModel->getById($id);
+            $html   = $this->twig->render('ticket/edit.html.twig', [
+                'base_path' => $this->basePath,
+                'ticket'    => $ticket,
+                'events'    => $this->eventModel->getAll(),
+                'errors'    => $errors,
+                'input'     => $data,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
         $ticket = $this->ticketModel->load($id);
 
         if ($ticket->id) {

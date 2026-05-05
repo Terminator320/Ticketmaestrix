@@ -45,8 +45,24 @@ class CategoryController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $data = $request->getParsedBody();
+
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        if (empty($data['name'])) $errors['name'] = ['Name is required.'];
+
+        if ($errors) {
+            $html = $this->twig->render('category/create.html.twig', [
+                'base_path' => $this->basePath,
+                'errors'    => $errors,
+                'input'     => $data,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
         $this->categoryModel->create((string) ($data['name'] ?? ''));
+
         return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
     }
 
@@ -74,8 +90,25 @@ class CategoryController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $id       = (int) $args['id'];
-        $data     = $request->getParsedBody();
+
+        $id   = (int) $args['id'];
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        if (empty($data['name'])) $errors['name'] = ['Name is required.'];
+
+        if ($errors) {
+            $category = $this->categoryModel->getById($id);
+            $html     = $this->twig->render('category/edit.html.twig', [
+                'base_path' => $this->basePath,
+                'category'  => $category,
+                'errors'    => $errors,
+                'input'     => $data,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
         $category = $this->categoryModel->load($id);
 
         if ($category->id) {
@@ -114,15 +147,5 @@ class CategoryController
         return $response;
     }
 
-   public function showByCategory(Request $request, Response $response, array $args): Response {
-    $categoryId = $args['id'];
 
-    $events = $this->db->table('events')->where('category_id', $categoryId)->get();
-    $category = $this->db->table('categories')->where('id', $categoryId)->first();
-
-    return $this->view->render($response, 'events_by_category.html.twig', [
-        'events' => $events,
-        'category' => $category
-    ]);
-}
 }

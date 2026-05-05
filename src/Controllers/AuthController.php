@@ -43,29 +43,62 @@ class AuthController
         return $this->render($response, 'auth/forgot_password_p3.html.twig');
     }
 
+    // Brute-force protection thresholds — adjust here if needed.
+    private const MAX_ATTEMPTS    = 5;    // failed attempts before lockout kicks in
+    private const LOCKOUT_SECONDS = 900;  // 15 minutes
+
     public function login(Request $request, Response $response): Response
     {
-        // Read submitted credentials with safe defaults so a missing field
-        // doesn't crash the controller.
-        $data     = $request->getParsedBody();
-        $email    = (string) ($data['email'] ?? '');
-        $password = (string) ($data['password'] ?? '');
+        // Guard against brute force: if a lockout timestamp exists in the session
+        // and it hasn't expired yet, block the request immediately without touching
+        // the database or even reading the POST body.
+        $lockedUntil = (int) ($_SESSION['login_lockout_until'] ?? 0);
+        if ($lockedUntil > time()) {
+            $remaining = (int) ceil(($lockedUntil - time()) / 60);
+            $html = $this->twig->render('auth/login.html.twig', [
+                'base_path' => $this->basePath,
+                'error'     => "Too many failed attempts. Try again in {$remaining} minute(s).",
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(429);
+        }
 
-        // Look up the user and verify the password against the stored hash.
-        $user = $this->users->findByEmail($email);
+        $data     = (array) ($request->getParsedBody() ?? []);
+        $email    = trim((string) ($data['email'] ?? ''));
+        $password = (string) ($data['password'] ?? '');
+        $user     = $this->users->findByEmail($email);
 
         if ($user && $user->id && password_verify($password, $user->password)) {
-            // Mark the session as authenticated, then send them home.
+            // Successful login — reset the attempt counter so a user who previously
+            // had one bad attempt isn't penalised on their next visit.
+            unset($_SESSION['login_attempts'], $_SESSION['login_lockout_until']);
             Auth::login((int) $user->id);
             return $response
                 ->withHeader('Location', $this->basePath . '/')
                 ->withStatus(302);
         }
 
-        // Re-render the login page with an error and a 401 status.
+        // Wrong credentials — increment the session counter.
+        // When the threshold is hit, record the lockout expiry and drop the counter
+        // (the expiry timestamp is all we need from this point on).
+        $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
+        if ($_SESSION['login_attempts'] >= self::MAX_ATTEMPTS) {
+            $_SESSION['login_lockout_until'] = time() + self::LOCKOUT_SECONDS;
+            unset($_SESSION['login_attempts']);
+            $html = $this->twig->render('auth/login.html.twig', [
+                'base_path' => $this->basePath,
+                'error'     => 'Too many failed attempts. Try again in 15 minutes.',
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(429);
+        }
+
+        // Tell the user how many tries they have left so they know the limit exists.
+        $attemptsLeft = self::MAX_ATTEMPTS - $_SESSION['login_attempts'];
         $html = $this->twig->render('auth/login.html.twig', [
             'base_path' => $this->basePath,
-            'error'     => 'Invalid email or password.',
+            'error'     => "Invalid email or password. {$attemptsLeft} attempt(s) remaining.",
+            'input'     => $data,
         ]);
         $response->getBody()->write($html);
         return $response->withStatus(401);
@@ -73,7 +106,37 @@ class AuthController
 
     public function signup(Request $request, Response $response): Response
     {
-        $data      = $request->getParsedBody();
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        $email     = trim((string) ($data['email'] ?? ''));
+        $password  = (string) ($data['password'] ?? '');
+        $password2 = (string) ($data['password2'] ?? '');
+
+        if (empty($data['fullname'])) $errors['fullname'] = ['Full name is required.'];
+        if (empty($email)) {
+            $errors['email'] = ['Email is required.'];
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = ['Enter a valid email address.'];
+        } elseif (!isset($errors['fullname']) && $this->users->findByEmail($email)) {
+            // Only hit the DB once required fields pass — avoids unnecessary query on partially-empty forms.
+            $errors['email'] = ['This email is already registered.'];
+        }
+        if (empty($password)) $errors['password'] = ['Password is required.'];
+        elseif (strlen($password) < 8) $errors['password'] = ['Password must be at least 8 characters.'];
+        if (empty($password2)) $errors['password2'] = ['Please confirm your password.'];
+        elseif ($password !== $password2) $errors['password2'] = ['Passwords do not match.'];
+
+        if ($errors) {
+            $html = $this->twig->render('auth/signup.html.twig', [
+                'base_path' => $this->basePath,
+                'errors'    => $errors,
+                'input'     => $data,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
         $fullname  = trim((string) ($data['fullname'] ?? ''));
         $parts     = explode(' ', $fullname, 2);
         $firstName = $parts[0] ?? '';
@@ -82,8 +145,8 @@ class AuthController
         $this->users->create([
             'first_name'   => $firstName,
             'last_name'    => $lastName,
-            'email'        => (string) ($data['email'] ?? ''),
-            'password'     => (string) ($data['password'] ?? ''),
+            'email'        => $email,
+            'password'     => $password,
             'phone_number' => (string) ($data['phone_number'] ?? ''),
             'role'         => 'user',
         ]);

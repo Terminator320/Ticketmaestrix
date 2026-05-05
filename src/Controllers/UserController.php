@@ -28,7 +28,22 @@ class UserController
     /** POST /users — create a new user (admin form). */
     public function store(Request $request, Response $response): Response
     {
-        $data = $request->getParsedBody();
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        if (empty($data['first_name'])) $errors['first_name'] = ['First name is required.'];
+        if (empty($data['last_name']))  $errors['last_name']  = ['Last name is required.'];
+        if (empty($data['email']))      $errors['email']      = ['Email is required.'];
+        elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = ['Enter a valid email address.'];
+        if (empty($data['password']))   $errors['password']   = ['Password is required.'];
+        elseif (strlen($data['password']) < 8) $errors['password'] = ['Password must be at least 8 characters.'];
+
+        if ($errors) {
+            return $response
+                ->withHeader('Location', $this->basePath . '/admin')
+                ->withStatus(302);
+        }
+
         $this->userModel->create([
             'first_name'   => $data['first_name'] ?? '',
             'last_name'    => $data['last_name'] ?? '',
@@ -171,9 +186,8 @@ class UserController
     }
 
     /**
-     * POST /editprofile — save the logged-in user's edits. Splits the
-     * single "Full Name" input on first space; ignores fields that don't
-     * exist on the users table (birthday, location, bio).
+     * POST /editprofile — save the logged-in user's edits. Validates name
+     * and email in-controller (nested user[*] keys can't use middleware).
      */
     public function updateProfile(Request $request, Response $response): Response
     {
@@ -182,19 +196,38 @@ class UserController
         }
 
         $id   = (int) Auth::userId();
-        $data = $request->getParsedBody();
+        $data = (array) ($request->getParsedBody() ?? []);
         $form = (array) ($data['user'] ?? []);
 
+        $errors = [];
+        if (empty($form['name']))  $errors['name']  = ['Full name is required.'];
+        if (empty($form['email'])) $errors['email'] = ['Email is required.'];
+        elseif (!filter_var($form['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = ['Enter a valid email address.'];
+
+        if ($errors) {
+            $html = $this->twig->render('user/edit_profile.html.twig', [
+                'base_path'     => $this->basePath,
+                'current_route' => 'profile',
+                'user'          => Auth::user(),
+                'errors'        => $errors,
+                'input'         => $form,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
+        $name  = trim((string) ($form['name'] ?? ''));
+        $email = trim((string) ($form['email'] ?? ''));
+
         // Split "First Last" into first_name + last_name.
-        $fullName  = trim((string) ($form['name'] ?? ''));
-        $parts     = explode(' ', $fullName, 2);
+        $parts     = explode(' ', $name, 2);
         $firstName = $parts[0] ?? '';
         $lastName  = $parts[1] ?? '';
 
         $this->userModel->update($id, [
             'first_name'   => $firstName,
             'last_name'    => $lastName,
-            'email'        => (string) ($form['email'] ?? ''),
+            'email'        => $email,
             'phone_number' => (string) ($form['phone'] ?? ''),
         ]);
 
