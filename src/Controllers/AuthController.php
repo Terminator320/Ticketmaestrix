@@ -155,13 +155,15 @@ class AuthController
         return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
     }
 
-    public function show2faSetup(Request $request, Response $response): Response
+public function show2faSetup(Request $request, Response $response): Response
     {
         $signupData = $_SESSION['signup_user_data'] ?? null;
         $pendingUserId = $_SESSION['2fa_setup_pending_user_id'] ?? null;
 
         if (!$signupData && !$pendingUserId) {
-            return $response->withHeader('Location', $this->basePath . '/signup')->withStatus(302);
+            return $response
+                ->withHeader('Location', $this->basePath . '/signup')
+                ->withStatus(302);
         }
 
         $cached = $_SESSION['2fa_setup_data'] ?? null;
@@ -186,8 +188,10 @@ class AuthController
             'secret'    => $cached['secret'],
             'error'     => $error,
         ]);
-    }
 
+        $response->getBody()->write($html);
+        return $response;
+    }
     public function verify2faSetup(Request $request, Response $response): Response
     {
         $signupData    = $_SESSION['signup_user_data'] ?? null;
