@@ -2,6 +2,12 @@
 //test 
 declare(strict_types=1);
 
+// Suppress deprecation warnings for libraries not yet fully compatible with PHP 8.4+
+error_reporting(E_ALL & ~E_DEPRECATED);
+
+// Prevent warnings from being prepended to JSON/HTML output
+ini_set('display_errors', '0');
+
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\CartController;
@@ -24,13 +30,18 @@ use App\Models\OrderModel;
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\VenueModel;
+use App\Models\PointsHistoryModel;
+use App\Services\OtpService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use RedBeanPHP\R;
 use Slim\Factory\AppFactory;
+use Symfony\Component\Translation\Loader\ArrayLoader;
+use Symfony\Component\Translation\Translator;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFunction;
 
 
 
@@ -47,6 +58,8 @@ $dotenv->load();
 // Bootstraps PHP sessions so Auth + Cart helpers can read/write $_SESSION.
 // Must run before any output and before the DI container builds controllers
 // that may consult Auth during construction.
+// cookie_lifetime=0 means the PHPSESSID cookie expires when the browser closes.
+ini_set('session.cookie_lifetime', '0');
 session_start();
 
 
@@ -69,9 +82,29 @@ $twig   = new Environment($loader, [
 
 // Twig globals — exposed to every template so the navbar (and any other
 // partial) can render auth-aware UI without each controller passing them.
-$twig->addGlobal('current_user', Auth::user());
-$twig->addGlobal('is_admin',     Auth::isAdmin());
-$twig->addGlobal('cart_count',   Cart::count());
+$twig->addGlobal('current_user',    Auth::user());
+$twig->addGlobal('is_admin',        Auth::isAdmin());
+$twig->addGlobal('cart_count',      Cart::count());
+// Unix timestamp so the JS can compute seconds-remaining without server drift.
+$twig->addGlobal('cart_expires_at', (int) ($_SESSION['cart_expires_at'] ?? 0));
+
+
+
+// ============== I18N — symfony/translation ================
+// Reads locale from session; defaults to 'en'.
+// trans('key') is available in every Twig template.
+
+$translator = new Translator($_SESSION['lang'] ?? 'en');
+$translator->addLoader('array', new ArrayLoader());
+$translator->addResource('array', require __DIR__ . '/translations/messages.en.php', 'en');
+$translator->addResource('array', require __DIR__ . '/translations/messages.fr.php', 'fr');
+
+// Expose trans() to templates and inject the active locale on every render.
+$twig->addFunction(new TwigFunction('trans', function (string $key, array $params = []) use ($translator) {
+    $locale = $_SESSION['lang'] ?? 'en';
+    return $translator->trans($key, $params, null, $locale);
+}));
+$twig->addGlobal('current_locale', $_SESSION['lang'] ?? 'en');
 
 
 
@@ -103,12 +136,14 @@ $container->set(CartController::class, fn() => new CartController(
     new VenueModel(),
     new OrderModel(),
     new OrderItemModel(),
+    new PointsHistoryModel(),
     $basePath,
 ));
 
 $container->set(AuthController::class, fn() => new AuthController(
     $twig,
     new UserModel(),
+    new OtpService(new UserModel()),
     $basePath,
 ));
 
@@ -117,6 +152,7 @@ $container->set(UserController::class, fn() => new UserController(
     new UserModel(),
     new TicketModel(),
     new OrderModel(),
+    new PointsHistoryModel(),
     $basePath,
 ));
 
@@ -162,6 +198,7 @@ $container->set(TicketController::class, fn() => new TicketController(
     $twig,
     new TicketModel(),
     new EventModel(),
+    new VenueModel(),
     $basePath,
 ));
 
@@ -239,11 +276,16 @@ $app->group('', function ($group) {
     $group->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
     $group->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
     $group->get('/newpassword',      [AuthController::class, 'showNewPassword']);
+    $group->get('/2fa/setup',        [AuthController::class, 'show2faSetup']);
+    $group->post('/2fa/setup',       [AuthController::class, 'verify2faSetup']);
+    $group->get('/2fa/login',        [AuthController::class, 'show2faLogin']);
+    $group->post('/2fa/login',       [AuthController::class, 'verify2faLogin']);
 });
 
 // --- Admin ---
 $app->get('/admin', [AdminController::class, 'showAdminDashboard']);
 $app->post('/admin/users/create', [AdminController::class, 'createAdmin']);
+$app->post('/admin/users/{id}/edit', [AdminController::class, 'updateAdmin']);
 $app->post('/admin/users/{id}/delete', [AdminController::class, 'deleteAdmin']);
 
 // --- Users ---
@@ -329,7 +371,20 @@ $app->group('/cart', function ($group) {
     $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
     $group->post('/clear',                [CartController::class, 'clear']);
     $group->post('/checkout',             [CartController::class, 'checkout']);
+    $group->post('/expire',               [CartController::class, 'expire']);
 });
+
+
+// --- Language switcher ---
+$app->get('/lang/{locale}', function (Request $request, Response $response, array $args) use ($basePath) {
+    $allowed = ['en', 'fr'];
+    // Store the chosen locale in session so it persists across requests.
+    if (in_array($args['locale'], $allowed, true)) {
+        $_SESSION['lang'] = $args['locale'];
+    }
+    return $response->withHeader('Location', $basePath . '/')->withStatus(302);
+});
+
 
 
 $app->run();

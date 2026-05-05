@@ -6,6 +6,7 @@
     <title>Edit Profile - TicketMaestrix</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ base_path }}/css/forms.css">
     <style>
         body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
         .edit-card { border: none; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
@@ -52,15 +53,25 @@
                         <label class="form-label">Full Name *</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                            <input type="text" name="user[name]" class="form-control" value="{{ user.first_name }} {{ user.last_name }}">
+                            <input type="text" name="user[name]" required
+                                   class="form-control{{ errors.name is defined ? ' is-invalid' : '' }}"
+                                   value="{{ input.name ?? (user.first_name ~ ' ' ~ user.last_name) }}">
                         </div>
+                        {% if errors.name is defined %}
+                            <div class="invalid-feedback">{{ errors.name | first }}</div>
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Email Address *</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
-                            <input type="email" name="user[email]" class="form-control" value="{{ user.email }}">
+                            <input type="email" name="user[email]" required
+                                   class="form-control{{ errors.email is defined ? ' is-invalid' : '' }}"
+                                   value="{{ input.email ?? user.email }}">
                         </div>
+                        {% if errors.email is defined %}
+                            <div class="invalid-feedback">{{ errors.email | first }}</div>
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Phone Number</label>

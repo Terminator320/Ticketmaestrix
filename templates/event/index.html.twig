@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events - TicketMaestrix</title>
+    <title>Admin Dashboard - TicketMaestrix</title>
     
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,6 +15,8 @@
         :root { 
             --brand-purple: #5E246E; 
             --brand-hover: #4a1d56; 
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
         }
 
         body { 
@@ -23,19 +25,20 @@
             color: #1a202c;
         }
 
-        /* Page Header Styling */
-        .page-header {
-            padding: 2.5rem 0;
-            margin-bottom: 2rem;
+        /* Admin Header Section */
+        .admin-header {
+            padding: 3rem 0 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 3rem;
         }
 
-        /* Purple Button Theme - Fixed Hover for Bootstrap */
+        /* Management Buttons */
         .btn-purple {
             background-color: var(--brand-purple) !important;
             color: white !important;
             border-radius: 10px;
             font-weight: 700;
-            padding: 12px 28px;
+            padding: 12px 24px;
             border: none !important;
             transition: all 0.3s ease;
             text-decoration: none !important;
@@ -45,9 +48,27 @@
 
         .btn-purple:hover {
             background-color: var(--brand-hover) !important;
-            color: white !important;
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+        }
+
+        .btn-mgmt {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-mgmt:hover {
+            border-color: var(--brand-purple);
+            color: var(--brand-purple);
+            background: #fdfaff;
         }
 
         /* Event Card Design */
@@ -82,32 +103,26 @@
             flex-direction: column;
         }
 
-        /* Pagination Styling */
-        .pagination .page-link {
-            color: var(--brand-purple);
-            border: 1px solid #eee;
-            margin: 0 4px;
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 10px 18px;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: var(--brand-purple);
-            border-color: var(--brand-purple);
-            color: white;
-        }
-
-        .pagination .page-item.disabled .page-link {
-            color: #ccc;
-        }
-
         .admin-footer {
             margin-top: auto;
-            padding-top: 1.25rem;
+            padding: 1.25rem 1.75rem;
             border-top: 1px solid #f1f5f9;
             display: flex;
             justify-content: space-between;
+        }
+
+        /* Pagination */
+        .pagination .page-link {
+            color: var(--brand-purple);
+            border-radius: 8px;
+            margin: 0 3px;
+            font-weight: 600;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--brand-purple) !important;
+            border-color: var(--brand-purple) !important;
+            color: #ffffff !important; /* Forces the text to be visible */
         }
     </style>
 </head>
@@ -118,25 +133,42 @@
 
     <div class="container">
         
-        <!-- Header Section -->
-        <header class="page-header d-flex justify-content-between align-items-center">
-            <h1 class="fw-800 display-6 mb-0">Events</h1>
-            <a href="{{ base_path }}/events/create" class="btn-purple">
-                <i class="bi bi-plus-lg me-2"></i> Add New Event
-            </a>
+        <!-- Admin Dashboard Header -->
+        <header class="admin-header">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="fw-800 display-5 mb-1">Events Console</h1>
+                    <p class="text-muted fs-5">System administration and event oversight.</p>
+                </div>
+                <div class="col-lg-6 text-lg-end mt-4 mt-lg-0">
+                    <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
+                        <a href="{{ base_path }}/categories" class="btn-mgmt">
+                            <i class="bi bi-tags-fill me-2"></i> Categories
+                        </a>
+                        <a href="{{ base_path }}/venues" class="btn-mgmt">
+                            <i class="bi bi-geo-alt-fill me-2"></i> Venues
+                        </a>
+                        <a href="{{ base_path }}/tickets" class="btn-mgmt">
+                            <i class="bi bi-ticket-perforated-fill me-2"></i> Tickets
+                        </a>
+                        <a href="{{ base_path }}/events/create" class="btn-purple ms-lg-2">
+                            <i class="bi bi-plus-lg me-2"></i> New Event
+                        </a>
+                    </div>
+                </div>
+            </div>
         </header>
 
-        <!-- Events Grid (Controller should limit this to 9) -->
+        <!-- Events Grid -->
         <div class="row g-4">
             {% for event in events %}
             <div class="col-md-6 col-lg-4">
                 <article class="event-card">
                     
-                    <!-- Dynamic Event Image -->
                     {% if event.event_image %}
                         <img src="{{ event.event_image }}" class="event-img" alt="{{ event.title }}">
                     {% else %}
-                        <div class="event-img d-flex align-items-center justify-content-center bg-light">
+                        <div class="event-img d-flex align-items-center justify-content-center">
                             <i class="bi bi-calendar2-event text-muted opacity-25" style="font-size: 3.5rem;"></i>
                         </div>
                     {% endif %}
@@ -155,55 +187,51 @@
                         </div>
 
                         <!-- Ticket Button -->
-                        <a href="{{ base_path }}/tickets/event/{{ event.id }}" class="btn-purple w-100 mb-3 text-center">
-                            Manage Tickets
+                        <a href="{{ base_path }}/tickets/event/{{ event.id }}" class="btn-purple w-100 mb-2 text-center justify-content-center">
+                            Manage Event Tickets
                         </a>
+                    </div>
 
-                        <!-- Admin Actions -->
-                        <div class="admin-footer">
-                            <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary px-3">
-                                <i class="bi bi-pencil-square me-1"></i> Edit
-                            </a>
-                            
-                            <form action="{{ base_path }}/events/{{ event.id }}/delete" method="post" class="m-0" onsubmit="return confirm('Delete this event?')">
-                                <button type="submit" class="btn btn-sm btn-outline-danger px-3">
-                                    <i class="bi bi-trash3 me-1"></i> Delete
-                                </button>
-                            </form>
-                        </div>
+                    <!-- Admin Actions -->
+                    <div class="admin-footer">
+                        <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary px-4 rounded-pill">
+                            <i class="bi bi-pencil-square me-1"></i> Edit
+                        </a>
+                        
+                        <form action="{{ base_path }}/events/{{ event.id }}/delete" method="post" class="m-0" onsubmit="return confirm('Permanently delete this event?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger px-4 rounded-pill">
+                                <i class="bi bi-trash3 me-1"></i> Delete
+                            </button>
+                        </form>
                     </div>
                 </article>
             </div>
             {% else %}
             <div class="col-12 text-center py-5">
-                <p class="text-muted fs-5">No events currently found.</p>
-                <a href="{{ base_path }}/events/create" class="text-purple fw-bold">Create the first one</a>
+                <div class="py-5">
+                    <i class="bi bi-calendar-x display-1 text-light mb-4"></i>
+                    <p class="text-muted fs-4">No events found in the database.</p>
+                    <a href="{{ base_path }}/events/create" class="btn-purple mt-2">Create Your First Event</a>
+                </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- DYNAMIC PAGINATION -->
+        <!-- Pagination -->
         {% if totalPages > 1 %}
         <nav class="my-5">
             <ul class="pagination justify-content-center">
-                
-                <!-- Previous Page Link -->
                 <li class="page-item {{ currentPage <= 1 ? 'disabled' : '' }}">
                     <a class="page-link" href="?page={{ currentPage - 1 }}">Previous</a>
                 </li>
-
-                <!-- Page Number Links -->
                 {% for i in 1..totalPages %}
                 <li class="page-item {{ i == currentPage ? 'active' : '' }}">
                     <a class="page-link" href="?page={{ i }}">{{ i }}</a>
                 </li>
                 {% endfor %}
-
-                <!-- Next Page Link -->
                 <li class="page-item {{ currentPage >= totalPages ? 'disabled' : '' }}">
                     <a class="page-link" href="?page={{ currentPage + 1 }}">Next</a>
                 </li>
-                
             </ul>
         </nav>
         {% endif %}

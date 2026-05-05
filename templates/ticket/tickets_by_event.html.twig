@@ -3,60 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tickets - TicketMaestrix</title>
+    <title>Available Tickets - TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <style>
-        :root { --brand-purple: #5E246E; }
-        body { background-color: #F8F9FA; }
-        .ticket-row { border-left: 4px solid var(--brand-purple); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        :root { 
+            --brand-purple: #5E246E; 
+            --brand-deep: #371840;
+            --brand-hover: #4a1d56;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        /* 1. Reset & Global Styles */
+        * { border-radius: 0 !important; } /* Matching your flat design requirement */
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Inter', sans-serif; 
+            color: #1a202c;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main { flex: 1; }
+
+        /* 2. Header Section */
+        .admin-header {
+            background: white;
+            padding: 3rem 0;
+            border-bottom: 2px solid var(--brand-purple);
+            margin-bottom: 3rem;
+        }
+
+        .btn-mgmt {
+            background: white;
+            border: 2px solid var(--brand-deep);
+            color: var(--brand-deep);
+            font-weight: 700;
+            padding: 10px 20px;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .btn-mgmt:hover {
+            background: var(--brand-deep);
+            color: white;
+        }
+
+        /* 3. Ticket Card Design */
+        .ticket-card {
+            border: 2px solid var(--brand-deep);
+            background: white;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 8px 8px 0px rgba(55, 24, 64, 0.1);
+        }
+
+        .ticket-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px rgba(55, 24, 64, 0.15);
+        }
+
+        .ticket-visual {
+            background: var(--brand-purple);
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-bottom: 2px dashed white;
+        }
+
+        .ticket-icon {
+            color: rgba(255,255,255,0.2) !important;
+            font-size: 5rem;
+            position: absolute;
+        }
+
+        .price-badge {
+            position: relative;
+            z-index: 2;
+            background: #ffffff;
+            color: var(--brand-purple);
+            font-weight: 800;
+            padding: 8px 16px;
+            font-size: 1.2rem;
+            border: 2px solid var(--brand-deep);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .card-footer {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-add-cart {
+            background-color: var(--brand-purple);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+
+        .btn-add-cart:hover {
+            background-color: var(--brand-deep);
+        }
+
+        /* 4. Footer Styling */
+        footer {
+            background-color: var(--brand-deep);
+            color: white;
+            padding: 3rem 0;
+            margin-top: 5rem;
+            border-top: 5px solid var(--brand-purple);
+        }
+
     </style>
 </head>
 <body>
+
     {% include 'partials/navbar.html.twig' %}
 
-    <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <a href="{{ base_path }}/events/{{ event_id }}" class="text-decoration-none text-muted small">
-                    <i class="bi bi-arrow-left"></i> Back to Event
-                </a>
-                <h4 class="fw-bold mb-0 mt-2">
-                    <i class="bi bi-ticket-perforated me-2" style="color:var(--brand-purple)"></i>
-                    Available Tickets
-                </h4>
-            </div>
-            <span class="text-muted small">{{ tickets|length }} ticket(s)</span>
-        </div>
-
-        {% if tickets is empty %}
-        <div class="text-center py-5 text-muted">
-            <i class="bi bi-ticket-perforated display-4 d-block mb-3"></i>
-            No tickets available for this event.
-        </div>
-        {% else %}
-        <div class="row g-3">
-            {% for ticket in tickets %}
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 ticket-row">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold">Row {{ ticket.row }} — Seat {{ ticket.seat }}</div>
-                            <small class="text-muted">Ticket #{{ ticket.id }}</small>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="fw-bold" style="color:var(--brand-purple)">${{ ticket.price }}</span>
-                            <a href="{{ base_path }}/tickets/{{ ticket.id }}" class="btn btn-sm btn-outline-secondary">
-                                View
-                            </a>
+    <main>
+        <header class="admin-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <a href="{{ base_path }}/events/{{ event_id }}" class="text-purple text-decoration-none fw-bold small mb-2 d-inline-block">
+                            <i class="bi bi-arrow-left"></i> BACK TO EVENT
+                        </a>
+                        <h1 class="fw-800 display-6 mb-1 text-uppercase">{{ event.title|default('Available Tickets') }}</h1>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-geo-alt-fill text-purple"></i> {{ event.venue_name|default('Venue TBD') }} 
+                            <span class="mx-2">|</span> 
+                            <i class="bi bi-calendar-event text-purple"></i> {{ event.date }}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <div class="p-3 border-start border-4 border-purple bg-white shadow-sm">
+                            <span class="d-block text-muted small fw-bold">TOTAL AVAILABLE</span>
+                            <span class="h4 fw-800 mb-0">{{ tickets|length }} TICKETS</span>
                         </div>
                     </div>
                 </div>
             </div>
-            {% endfor %}
+        </header>
+
+        <div class="container mb-5">
+            {% if tickets is empty %}
+            <div class="text-center py-5">
+                <i class="bi bi-ticket-perforated display-1 text-muted mb-4 opacity-25"></i>
+                <p class="text-muted fs-4">No tickets available for this event yet.</p>
+                <a href="{{ base_path }}/tickets/create" class="btn-mgmt mt-3">
+                    <i class="bi bi-plus-lg me-2"></i> CREATE TICKETS
+                </a>
+            </div>
+            {% else %}
+            <div class="row g-4">
+                {% for ticket in tickets %}
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                    <article class="ticket-card">
+                        <div class="ticket-visual">
+                            <i class="bi bi-ticket-perforated-fill ticket-icon"></i>
+                            <span class="price-badge">${{ ticket.price }}</span>
+                        </div>
+                        
+                        <div class="card-content">
+                            <h3 class="h5 fw-800 mb-1">SECTION {{ ticket.row }}</h3>
+                            <p class="text-muted small mb-0">SEAT NUMBER: {{ ticket.seat }}</p>
+                        </div>
+
+                        <div class="card-footer">
+                            <form action="{{ base_path }}/cart/add" method="POST">
+                                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn-add-cart">
+                                    <i class="bi bi-cart-plus me-2"></i> SELECT SEAT
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-    </div>
+    </main>
+
+    <!-- Shared Footer -->
+    <footer>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="fw-800 text-uppercase letter-spacing-1 mb-2">TicketMaestrix</div>
+                    <p class="small opacity-75 mb-0">&copy; 2026 TicketMaestrix Inc. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex justify-content-md-end gap-3 mt-3 mt-md-0">
+                        <a href="#" class="text-white opacity-75 text-decoration-none small">Terms</a>
+                        <a href="#" class="text-white opacity-75 text-decoration-none small">Privacy</a>
+                        <a href="#" class="text-white opacity-75 text-decoration-none small">Support</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

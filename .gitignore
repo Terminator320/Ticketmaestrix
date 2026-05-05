@@ -9,7 +9,7 @@ composer.phar
 #Node modules
 node_modules/
 
-.env
+# Logs
 var/app.log
 .claude/
 CLAUDE.md

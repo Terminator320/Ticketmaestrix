@@ -1,35 +1,241 @@
-{% extends "base.html.twig" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Venues - TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-{% block title %}Venues - TicketMaestrix{% endblock %}
+        :root { 
+            --brand-purple: #5E246E; 
+            --brand-hover: #4a1d56; 
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
 
-{% block content %}
-<div class="page-header">
-    <h2>Venues</h2>
-    <a href="{{ base_path }}/venues/create" class="btn btn-primary">Add New Venue</a>
-</div>
+        body { 
+            background-color: #ffffff; 
+            font-family: 'Inter', sans-serif; 
+            color: #1a202c;
+        }
 
-<div class="grid">
-    {% for venue in venues %}
-    <div class="card" data-name="{{ venue.name|e('html_attr') }}">
-        <div class="card-header">
-            <h3>{{ venue.name|e('html') }}</h3>
-            <span class="sport-badge">{{ venue.capacity }} cap.</span>
-        </div>
-        <div class="card-body">
-            <p><strong>Address:</strong> {{ venue.address|e('html') }}</p>
-            <p><strong>Description:</strong> {{ venue.description|e('html') }}</p>
-        </div>
-        <div class="card-footer">
-            <a href="{{ base_path }}/venues/{{ venue.id }}/edit" class="btn btn-secondary">Edit</a>
-            <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="post" style="display:inline;">
-                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this venue?')">Delete</button>
-            </form>
+        /* Admin Header Section */
+        .admin-header {
+            padding: 3rem 0 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+        }
+
+        /* Button Styling */
+        .btn-purple {
+            background-color: var(--brand-purple) !important;
+            color: white !important;
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 12px 24px;
+            border: none !important;
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-purple:hover {
+            background-color: var(--brand-hover) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+        }
+
+        .btn-mgmt {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-mgmt:hover {
+            border-color: var(--brand-purple);
+            color: var(--brand-purple);
+            background: #fdfaff;
+        }
+
+        /* Venue Card Design (Matching image_fb7002.png) */
+        .venue-card {
+            border: 1px solid #f0f0f0;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .venue-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .venue-visual {
+            background: var(--brand-purple);
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .venue-icon {
+            color: #ffffff !important;
+            font-size: 4.5rem;
+        }
+
+        .capacity-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffffff;
+            color: var(--brand-purple);
+            font-weight: 800;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .card-content {
+            padding: 1.75rem;
+            flex-grow: 1;
+        }
+
+        .card-content h3 {
+            font-weight: 800;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: #1a202c;
+        }
+
+        .venue-meta {
+            font-size: 0.9rem;
+            color: #64748b;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .admin-footer {
+            margin-top: auto;
+            padding: 1.25rem 1.75rem;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            background: #fafafa;
+        }
+
+        .text-truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'partials/navbar.html.twig' %}
+
+    <div class="container">
+        
+        <!-- Admin Dashboard Header -->
+        <header class="admin-header">
+            <div class="row align-items-center">
+                <div class="col-lg-5">
+                    <h1 class="fw-800 display-5 mb-1">Venues</h1>
+                    <p class="text-muted fs-5">Manage stadium layouts and seating capacities.</p>
+                </div>
+                <div class="col-lg-7 text-lg-end mt-4 mt-lg-0">
+                    <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
+                        <!-- Restored Categories Link -->
+                        <a href="{{ base_path }}/categories" class="btn-mgmt">
+                            <i class="bi bi-tags-fill me-2"></i> Categories
+                        </a>
+                        <a href="{{ base_path }}/events" class="btn-mgmt">
+                            <i class="bi bi-calendar-event me-2"></i> Events
+                        </a>
+                        <a href="{{ base_path }}/tickets" class="btn-mgmt">
+                            <i class="bi bi-ticket-perforated me-2"></i> Tickets
+                        </a>
+                        <a href="{{ base_path }}/venues/create" class="btn-purple ms-lg-2">
+                            <i class="bi bi-plus-lg me-2"></i> Add New Venue
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Venues Grid -->
+        <div class="row g-4 mb-5">
+            {% for venue in venues %}
+            <div class="col-md-6 col-lg-4">
+                <article class="venue-card" data-name="{{ venue.name|e('html_attr') }}">
+                    
+                    <!-- Header Visual -->
+                    <div class="venue-visual">
+                        <span class="capacity-badge">
+                            <i class="bi bi-people-fill me-1"></i> {{ venue.capacity|number_format }}
+                        </span>
+                        <i class="bi bi-building-check venue-icon"></i>
+                    </div>
+                    
+                    <!-- Info Content -->
+                    <div class="card-content">
+                        <h3>{{ venue.name|e('html') }}</h3>
+                        <div class="venue-meta">
+                            <span><i class="bi bi-geo-alt-fill me-2 text-muted"></i>{{ venue.address|e('html') }}</span>
+                            <span class="text-truncate-2"><i class="bi bi-info-circle-fill me-2 text-muted"></i>{{ venue.description|e('html') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="admin-footer">
+                        <a href="{{ base_path }}/venues/{{ venue.id }}/edit" class="btn btn-sm btn-outline-secondary px-4 rounded-pill fw-bold">
+                            <i class="bi bi-pencil-square me-1"></i> Edit
+                        </a>
+                        
+                        <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="post" class="m-0" onsubmit="return confirm('Permanently delete this venue?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger px-4 rounded-pill fw-bold">
+                                <i class="bi bi-trash3 me-1"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="py-5">
+                    <i class="bi bi-building display-1 text-light mb-4"></i>
+                    <p class="text-muted fs-4">No venues found in the system.</p>
+                    <a href="{{ base_path }}/venues/create" class="btn-purple mt-2">Add Your First Venue</a>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
-    {% else %}
-    <div class="empty-state">
-        <p>No venues found. <a href="{{ base_path }}/venues/create">Add the first venue</a>.</p>
-    </div>
-    {% endfor %}
-</div>
-{% endblock %}
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

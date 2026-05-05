@@ -9,6 +9,7 @@ use App\Helpers\Cart;
 use App\Models\EventModel;
 use App\Models\OrderItemModel;
 use App\Models\OrderModel;
+use App\Models\PointsHistoryModel;
 use App\Models\TicketModel;
 use App\Models\VenueModel;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -30,6 +31,7 @@ class CartController
         private VenueModel      $venueModel,
         private OrderModel      $orderModel,
         private OrderItemModel  $orderItemModel,
+        private PointsHistoryModel $pointsHistoryModel,
         private string          $basePath,
     ) {}
 
@@ -42,9 +44,7 @@ class CartController
 
         Cart::add($ticketId, max(1, $qty));
 
-        return $response
-            ->withHeader('Location', $this->basePath . '/cart')
-            ->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
     }
 
     /** POST /cart/remove/{ticket_id} — remove a single line. */
@@ -68,6 +68,19 @@ class CartController
     }
 
     /**
+     * POST /cart/expire — called by the client-side countdown when the timer
+     * hits zero. Clears the cart and sends the user back to browse events.
+     */
+    public function expire(Request $request, Response $response): Response
+    {
+        Cart::clear();
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/events')
+            ->withStatus(302);
+    }
+
+    /**
      * POST /cart/checkout — convert the session cart into a real order.
      *
      * Login is required. Creates one orders row (status=1, paid) and one
@@ -83,6 +96,8 @@ class CartController
             return $redirect;
         }
 
+        Cart::checkExpiry();
+
         $rows = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
         if (count($rows) === 0) {
             return $response
@@ -91,19 +106,38 @@ class CartController
         }
 
         $userId = (int) Auth::userId();
-        $total  = Cart::subtotal($rows);
+        $subtotal  = Cart::subtotal($rows);
+
+        $pointsToUse = (int) ($request->getParsedBody()['points_to_use'] ?? 0);
+
+        $user = R::load('users', $userId);
+        $availablePoints = (int) ($user->points ?? 0);
+        $maxDiscount = (int) floor($subtotal * 100);
+
+        if ($pointsToUse <= 0) {
+            $pointsToUse = 0;
+        } elseif ($pointsToUse > $availablePoints) {
+            $pointsToUse = $availablePoints;
+        } elseif ($pointsToUse > $maxDiscount) {
+            $pointsToUse = $maxDiscount;
+        }
+
+        $discount = $pointsToUse * 0.01;
+        $total = $subtotal - $discount;
+
+        $pointsEarned = (int) floor($subtotal * 0.10);
 
         R::begin();
         try {
-            // Create the parent order with status=1 (paid).
             $order = R::dispense('orders');
-            $order->total_price = $total;
-            $order->status      = 1;
-            $order->order_time  = date('Y-m-d H:i:s');
-            $order->user_id     = $userId;
+            $order->total_price   = $total;
+            $order->status        = 1;
+            $order->order_time    = date('Y-m-d H:i:s');
+            $order->user_id       = $userId;
+            $order->points_earned = $pointsEarned;
+            $order->points_spent  = $pointsToUse;
             $orderId = (int) R::store($order);
 
-            // Persist each cart line as an order_item.
             foreach ($rows as $row) {
                 $item = R::dispense('order_items');
                 $item->quantity  = (int) $row['quantity'];
@@ -112,12 +146,25 @@ class CartController
                 R::store($item);
             }
 
-            // Award loyalty points: floor(10% of total).
-            $user = R::load('users', $userId);
-            if ($user->id) {
-                $user->points = (int) ($user->points ?? 0) + (int) floor($total * 0.10);
-                R::store($user);
+            if ($pointsToUse > 0) {
+                $user->points = $availablePoints - $pointsToUse;
+                $this->pointsHistoryModel->addPoints(
+                    $userId,
+                    -$pointsToUse,
+                    "Spent {$pointsToUse} points on order #{$orderId}",
+                    $orderId
+                );
             }
+
+            $user->points = (int) ($user->points ?? 0) + $pointsEarned;
+            R::store($user);
+
+            $this->pointsHistoryModel->addPoints(
+                $userId,
+                $pointsEarned,
+                "Earned {$pointsEarned} points (10%) from order #{$orderId}",
+                $orderId
+            );
 
             R::commit();
         } catch (\Throwable $e) {
@@ -125,7 +172,6 @@ class CartController
             throw $e;
         }
 
-        // Empty the cart and send the user to their profile to see the new order.
         Cart::clear();
         return $response
             ->withHeader('Location', $this->basePath . '/profile')

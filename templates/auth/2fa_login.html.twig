@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketMaestrix - Two-Factor Authentication</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #a060a8 0%, #4a215d 100%);
+            min-height: 100vh;
+        }
+
+        .login-container {
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .logo-circle {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            color: #7b2cbf;
+            font-size: 30px;
+        }
+
+        .btn-primary-tm {
+            background-color: #5E246E;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: background-color 0.25s ease;
+            width: 100%;
+        }
+
+        .btn-primary-tm:hover {
+            background-color: #371840;
+            color: white;
+        }
+
+        .otp-input {
+            letter-spacing: 0.3em;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid #d0aee8;
+            border-radius: 0.5rem;
+            color: #2d1b3d;
+        }
+
+        .otp-input:focus {
+            border-color: #7b2cbf;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.15);
+        }
+
+        .alert-error-tm {
+            background: #fdecea;
+            border: 1px solid #ef9a9a;
+            color: #c62828;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column align-items-center justify-content-center p-3">
+
+    <div class="text-center text-white mb-4">
+        <div class="logo-circle rounded-circle d-inline-flex justify-content-center align-items-center mb-3 shadow">
+            <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <h1 class="fw-bold display-5">Two-Factor Authentication</h1>
+        <p class="fs-5 opacity-75">Enter the code from your authenticator app</p>
+    </div>
+
+    <div class="card login-container shadow-lg border-0 rounded-4 p-4 p-sm-5">
+
+        {% if error %}
+        <div class="alert-error-tm mb-4">
+            <i class="bi bi-x-circle-fill me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <form action="{{ base_path }}/2fa/login" method="POST">
+            <div class="mb-4">
+                <label class="form-label fw-bold" for="otp-field">Verification Code</label>
+                <input id="otp-field"
+                       type="text"
+                       name="otp"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       maxlength="6"
+                       class="form-control otp-input"
+                       placeholder="000000"
+                       autocomplete="one-time-code"
+                       required
+                       autofocus>
+            </div>
+
+            <button type="submit" class="btn btn-primary-tm">
+                Verify & Sign In
+            </button>
+        </form>
+
+    </div>
+
+    <div class="text-center mt-4 text-white-50 px-4" style="font-size: 0.85rem; max-width: 500px;">
+        Open your authenticator app and enter the 6-digit code shown for Ticketmaestrix.
+    </div>
+
+</body>
+</html>

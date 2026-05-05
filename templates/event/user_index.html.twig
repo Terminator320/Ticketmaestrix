@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events | TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --brand-purple: #5E246E;
+            --brand-deep: #371840;
+            --brand-bg: #f8fafc;
+            --border-color: #cbd5e1;
+        }
+
+        /* 1. GLOBAL FLAT DESIGN */
+        * { border-radius: 0 !important; }
+
+        /* 2. REMOVE BLUE FOCUS RING */
+        .form-control:focus, .form-select:focus, .btn:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            border-color: var(--brand-purple) !important;
+        }
+
+        body {
+            background-color: var(--brand-bg);
+            font-family: 'Inter', sans-serif;
+            color: #1a202c;
+        }
+
+        /* 3. HERO SECTION - Matching image_edc240.jpg */
+        .events-hero {
+            background: linear-gradient(to right, var(--brand-deep), var(--brand-purple));
+            color: white;
+            padding: 6rem 0 8rem 0;
+            text-align: center;
+        }
+
+        .events-hero h1 {
+            font-weight: 700;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 4. STRUCTURED FILTER BAR */
+        .filter-wrapper {
+            margin-top: -3.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .filter-box {
+            background: white;
+            border: 2px solid var(--brand-deep);
+            padding: 1rem;
+            box-shadow: 10px 10px 0px rgba(55, 24, 64, 0.1);
+        }
+
+        /* Fixed Filter Button */
+        .btn-filter {
+            background-color: #7b3091;
+            color: white;
+            border: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            height: 100%;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn-filter:hover {
+            background-color: var(--brand-purple);
+            color: white;
+        }
+
+        /* 5. TITLES & CONTENT */
+        .section-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--brand-deep);
+            border-left: 6px solid var(--brand-purple);
+            padding-left: 15px;
+            margin-top: 4rem;
+        }
+
+        /* Pagination */
+        .pagination .page-link {
+            color: var(--brand-purple);
+            border-radius: 8px;
+            margin: 0 3px;
+            font-weight: 600;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--brand-purple) !important;
+            border-color: var(--brand-purple) !important;
+            color: #ffffff !important; /* Forces the text to be visible */
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'partials/navbar.html.twig' %}
+
+    <!-- Hero Section -->
+    <section class="events-hero">
+        <div class="container">
+            <h1>Discover Events</h1>
+            <p>Find the best tickets for the hottest events.</p>
+        </div>
+    </section>
+
+    <!-- WORKING SEARCH FORM -->
+    <div class="container filter-wrapper">
+        <div class="filter-box">
+            <form action="{{ base_path }}/events" method="GET" class="row g-2">
+                <div class="col-lg-5">
+                    <div class="input-group h-100">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <!-- Query param 'q' linked to your backend logic -->
+                        <input type="text" name="q" class="form-control border-start-0" 
+                               placeholder="Search events..." 
+                               value="{{ query_params.q|default('') }}">
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <select name="category" class="form-select h-100">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {{ query_params.category == cat.id ? 'selected' : '' }}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <select name="venue" class="form-select h-100">
+                        <option value="">All Venues</option>
+                        {% for v in venues %}
+                            <option value="{{ v.id }}" {{ query_params.venue == v.id ? 'selected' : '' }}>{{ v.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <button type="submit" class="btn btn-filter py-2">
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <div class="mb-4">
+            <h2 class="section-title">Upcoming Events</h2>
+        </div>
+
+        <div class="row g-4 mt-2">
+            {% for event in events %}
+            <div class="col-md-6 col-lg-4">
+                {% include 'event/event-card.html.twig' with {
+                    'event': event,
+                    'base_path': base_path
+                } %}
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="border-2 border-dashed border-secondary p-5 bg-white">
+                    <h4 class="text-muted mb-0">No events found</h4>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if totalPages > 1 %}
+        <nav class="my-5">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {{ currentPage <= 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ base_path }}/events?page={{ currentPage - 1 }}&q={{ query_params.q }}&category={{ query_params.category }}&venue={{ query_params.venue }}">Previous</a>
+                </li>
+                {% for i in 1..totalPages %}
+                <li class="page-item {{ i == currentPage ? 'active' : '' }}">
+                    <a class="page-link" href="{{ base_path }}/events?page={{ i }}&q={{ query_params.q }}&category={{ query_params.category }}&venue={{ query_params.venue }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+                <li class="page-item {{ currentPage >= totalPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ base_path }}/events?page={{ currentPage + 1 }}&q={{ query_params.q }}&category={{ query_params.category }}&venue={{ query_params.venue }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

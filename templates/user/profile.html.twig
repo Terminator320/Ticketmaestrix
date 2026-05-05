@@ -145,6 +145,43 @@
                 </div>
             </div>
 
+            <!-- Points History -->
+            <div class="col-lg-8 mt-2">
+                <div class="card custom-card p-4">
+                    <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-stars text-warning"></i> Points History
+                    </h5>
+                    {% if points_history is empty %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">No points activity yet. Make a purchase to start earning!</p>
+                    </div>
+                    {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-muted small text-uppercase">Date</th>
+                                    <th class="text-muted small text-uppercase">Description</th>
+                                    <th class="text-muted small text-uppercase text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in points_history %}
+                                <tr>
+                                    <td class="small text-muted">{{ entry.created_at|date('M j, Y g:i A') }}</td>
+                                    <td class="small">{{ entry.description }}</td>
+                                    <td class="small text-end fw-bold {% if entry.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ entry.amount > 0 ? '+' : '' }}{{ entry.amount }} pts
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Rewards -->
             <div class="col-lg-4">
                 <div class="card custom-card p-4">

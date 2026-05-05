@@ -31,17 +31,17 @@ class UserModel
         return R::findOne('users', 'email = ?', [$email]);
     }
 
-    public function create(array $data): \RedBeanPHP\OODBBean
+    public function create(array $data): mixed
     {
         $bean = R::dispense('users');
         $bean->first_name   = $data['first_name'];
         $bean->last_name    = $data['last_name'];
         $bean->email        = $data['email'];
-        // Passwords should be hashed before hitting the model ideally, 
-        // but keeping your structure consistent here:
         $bean->password     = password_hash($data['password'], PASSWORD_DEFAULT);
         $bean->phone_number = $data['phone_number'] ?? null;
         $bean->role         = $data['role'] ?? 'user';
+        $bean->totp_secret  = $data['totp_secret'] ?? null;
+        $bean->points       = 0;
         R::store($bean);
         return BeanHelper::castBeanProperties($bean);
     }
@@ -63,7 +63,7 @@ class UserModel
     /**
      * Updated to handle password changes and role management.
      */
-    public function update(int $id, array $data): ?\RedBeanPHP\OODBBean
+    public function update(int $id, array $data): mixed
     {
         $user = R::load('users', $id);
         if (!BeanHelper::isValidBean($user)) {
@@ -95,11 +95,11 @@ class UserModel
     public function delete(int $id): void
 {
     // R::load finds the 'user' bean by its primary key ID
-    $user = \RedBeanPHP\R::load('user', $id);
+    $user = R::load('users', $id);
     
     // If the user exists (id > 0), delete it from the database
     if ($user->id) {
-        \RedBeanPHP\R::trash($user);
+        R::trash($user);
     }
 }
 

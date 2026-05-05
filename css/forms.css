@@ -1,0 +1,116 @@
+/*
+ * TicketMaestrix — enhanced form validation styles.
+ * Loaded by every form template. Overrides Bootstrap's default is-invalid
+ * red-border + SVG-icon pattern with something more polished and on-brand.
+ */
+
+/* ─── Invalid inputs ─────────────────────────────────────── */
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    /* Remove Bootstrap's default right-side SVG exclamation icon */
+    background-image: none;
+    padding-right: 1rem;
+
+    /* Red left-edge accent instead of full red border */
+    border-color: #f87171;
+    border-width: 1px;
+    border-left: 3px solid #ef4444;
+    background-color: #fff8f8;
+    box-shadow: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: #ef4444;
+    border-left: 3px solid #dc2626;
+    background-color: #fff8f8;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+    outline: none;
+}
+
+/* ─── Input-group: tint the leading icon span too ────────── */
+
+.input-group:has(.is-invalid) .input-group-text {
+    border-color: #f87171;
+    border-left: 3px solid #ef4444;
+    background-color: #fff8f8;
+    color: #dc2626;
+    transition: all 0.15s ease;
+}
+
+/* ─── Label turns red when its field is invalid ──────────── */
+
+.mb-4:has(.is-invalid) > .form-label,
+.mb-3:has(.is-invalid) > .form-label,
+.col-12:has(.is-invalid) > .form-label,
+.col-md-6:has(.is-invalid) > .form-label,
+.col-md-4:has(.is-invalid) > .form-label {
+    color: #b91c1c;
+}
+
+/* ─── Error message pill ─────────────────────────────────── */
+
+.invalid-feedback {
+    display: flex !important;
+    align-items: center;
+    gap: 7px;
+    margin-top: 7px;
+    padding: 7px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #991b1b;
+    background: #fef2f2;
+    border-radius: 8px;
+    border-left: 3px solid #ef4444;
+
+    /* Slide down from hidden */
+    animation: tm-error-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Red circle badge with "!" */
+.invalid-feedback::before {
+    content: "!";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 900;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+@keyframes tm-error-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Alert danger (credential error banner, etc.) ───────── */
+
+.alert-danger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 12px 16px;
+    animation: tm-error-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.alert-danger::before {
+    content: "⚠";
+    font-size: 1rem;
+    flex-shrink: 0;
+}

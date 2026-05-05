@@ -3,72 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket #{{ ticket.id }} - TicketMaestrix</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Ticket #{{ ticket.id }} - Admin - TicketMaestrix</title>
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap/5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <style>
-        :root { --brand-purple: #5E246E; }
-        body { background-color: #F8F9FA; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        :root { 
+            --brand-purple: #5E246E; 
+            --brand-hover: #4a1d56;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            background-color: #f8fafc; 
+            font-family: 'Inter', sans-serif; 
+            color: #1a202c;
+        }
+
+        /* Ticket Card Aesthetic */
+        .ticket-container {
+            max-width: 550px;
+            margin: 4rem auto;
+        }
+
         .ticket-card {
-            border: 2px dashed #dee2e6;
-            border-radius: 16px;
             background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
         }
+
+        /* The Purple "Stub" Edge */
         .ticket-card::before {
             content: '';
             position: absolute;
             left: 0; top: 0; bottom: 0;
-            width: 8px;
+            width: 12px;
             background: var(--brand-purple);
-            border-radius: 16px 0 0 16px;
         }
+
+        .ticket-header {
+            background: #fafafa;
+            padding: 2rem;
+            border-bottom: 2px dashed #e2e8f0;
+            position: relative;
+        }
+
+        /* Decorative "Punch Holes" for the ticket look */
+        .ticket-header::after, .ticket-header::before {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            width: 24px;
+            height: 24px;
+            background: #f8fafc; /* Matches body bg */
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+        }
+        .ticket-header::before { left: -13px; }
+        .ticket-header::after { right: -13px; }
+
+        .price-pill {
+            background: var(--brand-purple);
+            color: white;
+            font-weight: 800;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+        }
+
+        .info-label {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .btn-purple-outline {
+            color: var(--brand-purple);
+            border: 2px solid var(--brand-purple);
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-purple-outline:hover {
+            background: var(--brand-purple);
+            color: white;
+        }
+
+        .back-link {
+            color: #64748b;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--brand-purple); }
     </style>
 </head>
 <body>
+
     {% include 'partials/navbar.html.twig' %}
 
-    <div class="container py-5" style="max-width: 600px;">
-        <a href="{{ base_path }}/events/{{ ticket.event_id }}" class="text-decoration-none text-muted small mb-4 d-inline-block">
-            <i class="bi bi-arrow-left"></i> Back to Event
-        </a>
+    <div class="container">
+        <div class="ticket-container">
+            
+            <a href="{{ base_path }}/tickets" class="back-link text-decoration-none d-inline-flex align-items-center mb-4">
+                <i class="bi bi-arrow-left-short fs-4"></i> Back to Inventory
+            </a>
 
-        <div class="ticket-card p-4 shadow-sm mb-4">
-            <div class="ms-2">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="ticket-card">
+                <!-- Header / Stub Section -->
+                <div class="ticket-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="fw-bold mb-0">Ticket #{{ ticket.id }}</h5>
-                        <small class="text-muted">Event #{{ ticket.event_id }}</small>
+                        <span class="info-label">Ticket Reference</span>
+                        <h2 class="h4 fw-800 mb-0">#{{ ticket.id }}</h2>
                     </div>
-                    <span class="badge text-white fs-6 px-3 py-2" style="background:var(--brand-purple)">
+                    <div class="price-pill">
                         ${{ ticket.price }}
-                    </span>
+                    </div>
                 </div>
 
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item px-0">
-                        <i class="bi bi-grid me-2 text-muted"></i>
-                        <strong>Row:</strong> {{ ticket.row ?: '—' }}
-                    </li>
-                    <li class="list-group-item px-0">
-                        <i class="bi bi-cursor me-2 text-muted"></i>
-                        <strong>Seat:</strong> {{ ticket.seat ?: '—' }}
-                    </li>
-                </ul>
+                <!-- Body Section -->
+                <div class="p-4 ps-5">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <span class="info-label">Event Details</span>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar-event me-2 text-muted"></i>
+                                <span class="fw-bold">Event ID: {{ ticket.event_id }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <span class="info-label">Row</span>
+                            <div class="info-value">
+                                <i class="bi bi-grid-3x2 me-2 text-muted fs-6"></i>{{ ticket.row ?: 'N/A' }}
+                            </div>
+                        </div>
 
-                <div class="mt-4 d-flex gap-2">
-                    <form action="{{ base_path }}/tickets/{{ ticket.id }}/delete" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('Delete this ticket?')">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
-                    </form>
+                        <div class="col-6">
+                            <span class="info-label">Seat Number</span>
+                            <div class="info-value">
+                                <i class="bi bi-person-badge me-2 text-muted fs-6"></i>{{ ticket.seat ?: 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Area -->
+                    <div class="mt-5 pt-4 border-top d-flex gap-2">
+                        <a href="{{ base_path }}/tickets/{{ ticket.id }}/edit" class="btn btn-purple-outline flex-grow-1">
+                            <i class="bi bi-pencil-square me-2"></i> Edit Details
+                        </a>
+                        
+                        <form action="{{ base_path }}/tickets/{{ ticket.id }}/delete" method="POST" class="m-0" onsubmit="return confirm('Permanently delete this ticket?')">
+                            <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-bold" style="border-radius: 10px; border-width: 2px;">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
+
+            <!-- Footer Meta -->
+            <p class="text-center text-muted small mt-4">
+                <i class="bi bi-shield-check me-1"></i> Managed via TicketMaestrix Core Administration
+            </p>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap/5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

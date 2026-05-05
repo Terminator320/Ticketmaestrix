@@ -1,0 +1,165 @@
+{# Cart-expiry flash banners.
+   Included by navbar.html.twig on every page.
+   Requires the `cart_expires_at` Twig global (Unix timestamp, 0 when no cart). #}
+{% if cart_expires_at > 0 %}
+<style>
+    @keyframes tm-pulse {
+        0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(247,103,7,.5); }
+        50%       { transform: scale(1.07); box-shadow: 0 0 0 7px rgba(247,103,7,0);  }
+    }
+    #expiry-warn-icon { animation: tm-pulse 1.4s ease-in-out infinite; }
+    #expiry-warn-close:hover, #expiry-expired-close:hover { opacity: 1 !important; }
+</style>
+
+<div style="position: sticky; top: 56px; z-index: 1039;">
+
+    {# 30-second warning panel #}
+    <div id="expiry-warn-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1);">
+        <div style="background: linear-gradient(to right, #FFF4E6, #FFEEDD); border-left: 4px solid #F76707; padding: 10px 20px; display: flex; align-items: center; gap: 14px;">
+            <div id="expiry-warn-icon" style="width: 42px; height: 42px; min-width: 42px; background: #F76707; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-clock-fill" style="color: #fff; font-size: 1.15rem;"></i>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 700; color: #7C2D12; font-size: 0.9rem; line-height: 1.4;">
+                    Hurry — your cart expires in
+                    <span id="flash-seconds" style="display: inline-block; background: #F76707; color: #fff; font-weight: 800; padding: 0 7px; border-radius: 5px; min-width: 2ch; text-align: center;">30</span>
+                    seconds
+                </div>
+                <div style="color: #9A3412; font-size: 0.75rem; margin-top: 1px;">Complete your purchase before your tickets are released.</div>
+                <div style="height: 3px; background: #FDBA74; border-radius: 2px; margin-top: 7px; overflow: hidden;">
+                    <div id="expiry-progress" style="height: 100%; background: #F76707; width: 100%; border-radius: 2px;"></div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;">
+                <button id="expiry-warn-close" type="button" aria-label="Close"
+                        style="background: none; border: none; cursor: pointer; color: #9A3412; font-size: 1rem; line-height: 1; padding: 0; opacity: 0.55; transition: opacity .2s;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <a href="{{ base_path }}/cart" style="font-size: 0.72rem; color: #F76707; font-weight: 700; text-decoration: none; white-space: nowrap;">
+                    Go to cart &rsaquo;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Expired panel #}
+    <div id="expiry-expired-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1);">
+        <div style="background: #1C1033; border-left: 4px solid #5E246E; padding: 10px 20px; display: flex; align-items: center; gap: 14px;">
+            <div style="width: 42px; height: 42px; min-width: 42px; background: #5E246E; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-cart-x-fill" style="color: #fff; font-size: 1.15rem;"></i>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 700; color: #F3F0FF; font-size: 0.9rem; line-height: 1.4;">Cart expired</div>
+                <div style="color: #C4B5FD; font-size: 0.75rem; margin-top: 1px;">Your tickets have been released — add them again to continue.</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
+                <a href="{{ base_path }}/events" style="font-size: 0.75rem; color: #C084FC; font-weight: 700; text-decoration: none; white-space: nowrap;">
+                    Browse events &rsaquo;
+                </a>
+                <button id="expiry-expired-close" type="button" aria-label="Close"
+                        style="background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 1rem; line-height: 1; padding: 0; opacity: 0.55; transition: opacity .2s;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    // The Unix timestamp (seconds) when the cart will expire.
+    // This value comes from the server via Twig.
+    const cartExpiresAt = {{ cart_expires_at }};
+
+    // Grab all the elements we need to control
+    const warningBanner   = document.getElementById('expiry-warn-wrap');
+    const expiredBanner   = document.getElementById('expiry-expired-wrap');
+    const secondsDisplay  = document.getElementById('flash-seconds');
+    const progressBar     = document.getElementById('expiry-progress');
+    const cartBadge       = document.getElementById('cart-badge');
+
+    // Keep track of whether the user closed the warning or if we already showed it
+    let warningDismissed = false;
+    let warningVisible   = false;
+
+    // When the user clicks X on the warning banner, slide it closed
+    document.getElementById('expiry-warn-close').addEventListener('click', () => {
+        warningBanner.style.maxHeight = '0';
+        warningDismissed = true;
+    });
+
+    // When the user clicks X on the expired banner, slide it closed
+    document.getElementById('expiry-expired-close').addEventListener('click', () => {
+        expiredBanner.style.maxHeight = '0';
+    });
+
+    // Animates the orange progress bar from its current position down to 0%
+    function animateProgressBar(secondsLeft) {
+        // Figure out what % of the 60-second window is left
+        const startPercent = Math.min(100, (secondsLeft / 60) * 100);
+
+        // Set the starting width instantly (no animation), then animate to 0
+        progressBar.style.transition = 'none';
+        progressBar.style.width = startPercent + '%';
+        progressBar.offsetWidth; // this line forces the browser to "apply" the width before we start animating
+        progressBar.style.transition = `width ${secondsLeft}s linear`;
+        progressBar.style.width = '0%';
+    }
+
+    // Slides the warning banner down and starts the progress bar
+    function showWarningBanner(secondsLeft) {
+        warningBanner.style.maxHeight = '200px';
+        animateProgressBar(secondsLeft);
+        warningVisible = true;
+    }
+
+    // Swaps the warning banner for the "cart expired" banner,
+    // fades out the cart badge, and clears the session on the server
+    function showExpiredBanner() {
+        // Slide the warning up and the expired message down
+        warningBanner.style.maxHeight = '0';
+        expiredBanner.style.maxHeight = '200px';
+
+        // Fade out the cart item count badge in the navbar, then remove it
+        if (cartBadge) {
+            cartBadge.style.opacity = '0';
+            setTimeout(() => cartBadge.remove(), 400);
+        }
+
+        // Tell the server to clear the cart session.
+        // We skip this on the cart page because it already has its own form that
+        // does the same thing and then redirects the user.
+        const onCartPage = document.getElementById('cart-expire-form') !== null;
+        if (!onCartPage) {
+            fetch('{{ base_path }}/cart/expire', { method: 'POST' }).catch(() => {});
+        }
+    }
+
+    // Runs every second to check how much time is left
+    function tick() {
+        const nowInSeconds     = Math.floor(Date.now() / 1000);
+        const secondsRemaining = Math.max(0, cartExpiresAt - nowInSeconds);
+
+        // Cart has expired — show the expired banner and stop the timer
+        if (secondsRemaining === 0) {
+            showExpiredBanner();
+            return;
+        }
+
+        // Inside the 60-second warning window
+        if (secondsRemaining <= 60 && !warningDismissed) {
+            secondsDisplay.textContent = secondsRemaining;
+
+            // Show the warning banner the first time we enter the window
+            if (!warningVisible) {
+                showWarningBanner(secondsRemaining);
+            }
+        }
+
+        // Schedule the next tick in 1 second
+        setTimeout(tick, 1000);
+    }
+
+    // Kick off the countdown
+    tick();
+</script>
+{% endif %}

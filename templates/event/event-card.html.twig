@@ -80,7 +80,7 @@
                 <i class="bi bi-calendar3 me-2"></i>{{ event.date }}
             </div>
             <div class="text-muted small mb-1">
-                <i class="bi bi-geo-alt me-2"></i>{{ event.venue }}
+                <i class="bi bi-geo-alt me-2"></i>{{ event.venue_name ?: event.venue ?: 'Venue TBA' }}
             </div>
             {% if event.tickets is defined %}
                 <div class="text-muted small">
@@ -91,7 +91,8 @@
 
         <div class="d-flex align-items-center justify-content-between pt-2 border-top">
             <div>
-                <span class="fs-5 fw-bold text-dark">${{ event.price|number_format(2) }}</span>
+                {% set display_price = event.min_price ?: event.price ?: 0 %}
+                <span class="fs-5 fw-bold text-dark">${{ display_price|number_format(2) }}</span>
                 {% if event.original_price is defined and event.original_price %}
                     <span class="text-decoration-line-through text-muted small ms-1">${{ event.original_price|number_format(2) }}</span>
                 {% endif %}
