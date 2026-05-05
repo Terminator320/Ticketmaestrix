@@ -6,7 +6,7 @@ namespace App\Services;
 
 use App\Models\UserModel;
 use RobThree\Auth\TwoFactorAuth;
-use RobThree\Auth\Providers\Qr\BaconQrCodeProvider;
+use RobThree\Auth\Providers\Qr\QRServerProvider;
 
 /**
  * OtpService
@@ -24,7 +24,7 @@ class OtpService
 
     public function __construct(private UserModel $userModel)
     {
-        $this->tfa = new TwoFactorAuth(new BaconQrCodeProvider(4, '#ffffff', '#000000', 'svg'), 'Ticketmaestrix');
+        $this->tfa = new TwoFactorAuth(new QRServerProvider(), 'Ticketmaestrix');
     }
 
     /**
