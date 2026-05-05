@@ -84,7 +84,7 @@ class OrderModel
     public function eventsAttendedByUser(int $userId): int
     {
         $sql = 'SELECT COUNT(DISTINCT t.event_id)
-                  FROM order_items oi
+                  FROM orderitem oi
                   JOIN orders o  ON o.id = oi.order_id
                   JOIN ticket t  ON t.id = oi.ticket_id
                  WHERE o.user_id = ? AND o.status > 0';

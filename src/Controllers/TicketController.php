@@ -182,6 +182,11 @@ class TicketController
 
     public function byEvent(Request $request, Response $response, array $args): Response
     {
+        // Redirect admins from the seat-selection (purchase) page to the ticket inventory (management)
+        if (Auth::isAdmin()) {
+            return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
+        }
+
         $eventId = (int) $args['id'];
         $tickets = $this->ticketModel->findByEvent($eventId);
         $event   = $this->eventModel->getById($eventId);

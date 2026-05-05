@@ -70,7 +70,9 @@ R::setup(
     $_ENV['DB_USERNAME'],
     $_ENV['DB_PASSWORD']
 );
-R::freeze(true);
+
+$debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+R::freeze(!$debug);
 
 
 // ============== TEMPLATE ENGINE ==============
@@ -222,7 +224,6 @@ $app->addRoutingMiddleware();
 // Add error middleware so you get useful error pages instead of blank screens
 // $app->addErrorMiddleware(true, true, true);
 
-$debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 $app->addErrorMiddleware($debug, true, true);
 
 // ============== MIDDLEWARE ==============
@@ -370,9 +371,11 @@ $app->group('/cart', function ($group) {
     $group->post('/add',                  [CartController::class, 'add']);
     $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
     $group->post('/clear',                [CartController::class, 'clear']);
-    $group->post('/checkout',             [CartController::class, 'checkout']);
     $group->post('/expire',               [CartController::class, 'expire']);
 });
+
+$app->get('/checkout',  [CartController::class, 'showCheckout']);
+$app->post('/checkout', [CartController::class, 'checkout']);
 
 
 // --- Language switcher ---

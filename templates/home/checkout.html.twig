@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketMaestrix - Checkout</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #a060a8 0%, #4a215d 100%);
+            min-height: 100vh;
+        }
+
+        .login-container {
+            max-width: 500px; 
+            width: 100%;
+        }
+
+        .logo-circle {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            color: #7b2cbf;
+            font-size: 30px;
+        }
+
+        .btn-primary-tm {
+            background-color: #5E246E;
+            color: white !important;
+            border: none;
+            padding: 0.8rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: background-color 0.25s ease;
+            width: 100%;
+        }
+
+        .btn-primary-tm:hover {
+            background-color: #371840;
+            color: white !important;
+        }
+
+        .otp-input {
+            letter-spacing: 0.3em;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid #d0aee8;
+            border-radius: 0.5rem;
+            color: #2d1b3d;
+        }
+
+        .otp-input:focus {
+            border-color: #7b2cbf;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.15);
+        }
+
+        .alert-error-tm {
+            background: #fdecea;
+            border: 1px solid #ef9a9a;
+            color: #c62828;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column align-items-center justify-content-center p-3">
+
+    <div class="text-center text-white mb-4">
+        <div class="logo-circle rounded-circle d-inline-flex justify-content-center align-items-center mb-3 shadow">
+            <i class="bi bi-ticket-perforated-fill"></i>
+        </div>
+        <h1 class="fw-bold display-5">Checkout</h1>
+        <p class="fs-5 opacity-75">Secure checkout powered by TicketMaestrix</p>
+    </div>
+
+    <div class="card login-container shadow-lg border-0 rounded-4 p-4 p-sm-5">
+
+        {% if error %}
+        <div class="alert-error-tm mb-4">
+            <i class="bi bi-x-circle-fill me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <form action="{{ base_path }}/checkout" method="POST">
+            <input type="hidden" name="points_to_use" value="{{ points_to_use }}">
+            
+            <div class="mb-4 p-3 bg-light rounded-3 border text-center">
+                <label class="form-label d-block text-muted small text-uppercase fw-bold">Amount to Pay</label>
+                <span class="display-6 fw-bold text-dark">${{ total|number_format(2) }}</span>
+                {% if discount > 0 %}
+                    <div class="text-success small mt-1">
+                        <i class="bi bi-tag-fill"></i> Includes ${{ discount|number_format(2) }} points discount
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Payment Method</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-credit-card"></i></span>
+                    <input type="text" name="payment_method" class="form-control border-start-0" placeholder="Visa, Mastercard, etc." required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Card Number</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-credit-card"></i></span>
+                    <input type="text" name="card_number" class="form-control border-start-0" placeholder="0000 0000 0000 0000" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Expiry Date</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-calendar-date"></i></span>
+                    <input type="text" name="expiry_date" class="form-control border-start-0" placeholder="MM/YY" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">CVV</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-shield-lock"></i></span>
+                    <input type="text" name="cvv" class="form-control border-start-0" placeholder="000" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-tm">
+                Place Order
+            </button>
+        </form>
+    </div>
+
+    <div class="text-center mt-4 text-white-50 px-4" style="font-size: 0.85rem; max-width: 500px;">
+        Secure checkout powered by TicketMaestrix
+    </div>
+
+</body>
+</html>

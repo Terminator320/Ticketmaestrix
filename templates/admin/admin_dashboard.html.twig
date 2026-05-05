@@ -143,12 +143,6 @@
                 <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="myevents-tab" data-bs-toggle="tab" data-bs-target="#myevents" type="button">My Events ({{ events|length }})</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button"><i class="bi bi-plus"></i> Create Event</button>
-            </li>
-            <li class="nav-item">
                 <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" type="button"><i class="bi bi-shield-lock"></i> Manage Admins</button>
             </li>
         </ul>
@@ -191,100 +185,6 @@
                     <h6 class="fw-bold">Event Performance</h6>
                     <hr class="text-muted opacity-25">
                     <div class="py-5 text-center text-muted">No data available for the selected period.</div>
-                </div>
-            </div>
-
-            <!-- Tab 2: My Events -->
-            <div class="tab-pane fade" id="myevents" role="tabpanel">
-                <div class="card form-card p-4">
-                    <h5 class="fw-bold mb-4">Manage Events</h5>
-                    {% if events|length == 0 %}
-                        <div class="empty-state">
-                            <i class="bi bi-calendar-x mb-3 d-block"></i>
-                            <h5 class="fw-bold">No events yet</h5>
-                            <p class="text-muted">Create your first event to get started</p>
-                            <button class="btn btn-create px-4" onclick="document.getElementById('create-tab').click()">Create Event</button>
-                        </div>
-                    {% else %}
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th>Date</th>
-                                        <th>Venue</th>
-                                        <th>Min Price</th>
-                                        <th class="text-end">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for event in events %}
-                                        <tr>
-                                            <td><a href="{{ base_path }}/events/{{ event.id }}" class="fw-bold text-decoration-none">{{ event.title }}</a></td>
-                                            <td>{{ event.date }}</td>
-                                            <td>{{ event.venue_name }}</td>
-                                            <td>{% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}—{% endif %}</td>
-                                            <td class="text-end">
-                                                <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
-                                                <form method="POST" action="{{ base_path }}/events/{{ event.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this event?');">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Tab 3: Create Event -->
-            <div class="tab-pane fade" id="create" role="tabpanel">
-                <div class="card form-card p-4 p-md-5">
-                    <h5 class="fw-bold mb-4">Create New Event</h5>
-                    <form method="POST" action="{{ base_path }}/events">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Event Title *</label>
-                                <input type="text" name="title" required class="form-control" placeholder="e.g. Summer Music Festival">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Category *</label>
-                                <select name="category_id" required class="form-select form-control">
-                                    <option selected disabled value="">Select category</option>
-                                    {% for c in categories %}
-                                        <option value="{{ c.id }}">{{ c.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Venue *</label>
-                                <select name="venue_id" required class="form-select form-control">
-                                    <option selected disabled value="">Select venue</option>
-                                    {% for v in venues %}
-                                        <option value="{{ v.id }}">{{ v.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Date *</label>
-                                <input type="datetime-local" name="date" required class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Image URL</label>
-                                <input type="text" name="event_image" class="form-control" placeholder="https://...">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Description</label>
-                                <textarea name="description" class="form-control" rows="4" placeholder="Describe your event..."></textarea>
-                            </div>
-                            <div class="col-12 d-flex gap-3 mt-4">
-                                <button type="submit" class="btn btn-create flex-grow-1">Create Event</button>
-                                <a href="{{ base_path }}/admin" class="btn btn-light px-4 border">Cancel</a>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
 

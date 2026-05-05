@@ -72,9 +72,7 @@ class AuthController
 
             if (empty($user->totp_secret)) {
                 $_SESSION['2fa_setup_pending_user_id'] = (int) $user->id;
-                return $response
-                    ->withHeader('Location', $this->basePath . '/2fa/setup')
-                    ->withStatus(302);
+                return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
             }
 
             return $response
@@ -154,12 +152,10 @@ class AuthController
             'password'     => $password,
         ];
 
-        return $response
-            ->withHeader('Location', $this->basePath . '/2fa/setup')
-            ->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
     }
 
-    public function show2faSetup(Request $request, Response $response): Response
+public function show2faSetup(Request $request, Response $response): Response
     {
         $signupData = $_SESSION['signup_user_data'] ?? null;
         $pendingUserId = $_SESSION['2fa_setup_pending_user_id'] ?? null;
@@ -196,7 +192,6 @@ class AuthController
         $response->getBody()->write($html);
         return $response;
     }
-
     public function verify2faSetup(Request $request, Response $response): Response
     {
         $signupData    = $_SESSION['signup_user_data'] ?? null;
@@ -241,21 +236,9 @@ class AuthController
     public function show2faLogin(Request $request, Response $response): Response
     {
         if (!isset($_SESSION['pending_user_id'])) {
-            return $response
-                ->withHeader('Location', $this->basePath . '/login')
-                ->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
         }
-
-        $error = $_SESSION['2fa_login_error'] ?? null;
-        unset($_SESSION['2fa_login_error']);
-
-        $html = $this->twig->render('auth/2fa_login.html.twig', [
-            'base_path' => $this->basePath,
-            'error'     => $error,
-        ]);
-
-        $response->getBody()->write($html);
-        return $response;
+        return $this->render($response, 'auth/2fa_login.html.twig');
     }
 
     public function verify2faLogin(Request $request, Response $response): Response
@@ -287,19 +270,22 @@ class AuthController
     public function logout(Request $request, Response $response): Response
     {
         Auth::logout();
-        return $response
-            ->withHeader('Location', $this->basePath . '/')
-            ->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
     }
 
-    private function render(Response $response, string $template): Response
+    /**
+     * Internal helper to render templates with the base_path.
+     */
+    private function render(Response $response, string $template, array $data = []): Response
     {
-        $html = $this->twig->render($template, [
-            'base_path' => $this->basePath,
-        ]);
-
-        $response->getBody()->write($html);
-
+        $data['base_path'] = $this->basePath;
+        try {
+            $html = $this->twig->render($template, $data);
+            $response->getBody()->write($html);
+        } catch (\Exception $e) {
+            $response->getBody()->write("Template Error: " . $e->getMessage());
+            return $response->withStatus(500);
+        }
         return $response;
     }
 }

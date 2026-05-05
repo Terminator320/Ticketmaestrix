@@ -10,7 +10,7 @@ class PointsHistoryModel
 {
     public function addPoints(int $userId, int $amount, string $description, ?int $orderId = null): void
     {
-        $bean = R::dispense('points_history');
+        $bean = R::dispense('pointshistory');
         $bean->user_id     = $userId;
         $bean->order_id    = $orderId;
         $bean->amount      = $amount;
@@ -22,7 +22,7 @@ class PointsHistoryModel
     public function findByUser(int $userId, int $limit = 50): array
     {
         return R::findAll(
-            'points_history',
+            'pointshistory',
             'user_id = ? ORDER BY created_at DESC LIMIT ?',
             [$userId, $limit]
         );
@@ -31,7 +31,7 @@ class PointsHistoryModel
     public function getTotal(int $userId): int
     {
         return (int) R::getCell(
-            'SELECT COALESCE(SUM(amount), 0) FROM points_history WHERE user_id = ?',
+            'SELECT COALESCE(SUM(amount), 0) FROM pointshistory WHERE user_id = ?',
             [$userId]
         );
     }
