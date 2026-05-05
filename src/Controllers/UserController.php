@@ -51,7 +51,6 @@ class UserController
             'last_name'    => $data['last_name'] ?? '',
             'email'        => $data['email'] ?? '',
             'password'     => $data['password'] ?? '',
-            'phone_number' => $data['phone_number'] ?? '',
             'role'         => $data['role'] ?? 'user',
         ]);
 
@@ -231,7 +230,6 @@ class UserController
             'first_name'   => $firstName,
             'last_name'    => $lastName,
             'email'        => $email,
-            'phone_number' => (string) ($form['phone'] ?? ''),
         ]);
 
         return $response

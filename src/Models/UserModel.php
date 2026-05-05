@@ -38,7 +38,6 @@ class UserModel
         $bean->last_name    = $data['last_name'];
         $bean->email        = $data['email'];
         $bean->password     = password_hash($data['password'], PASSWORD_DEFAULT);
-        $bean->phone_number = $data['phone_number'] ?? null;
         $bean->role         = $data['role'] ?? 'user';
         $bean->totp_secret  = $data['totp_secret'] ?? null;
         $bean->points       = 0;
@@ -79,9 +78,7 @@ class UserModel
         if (array_key_exists('email', $data)) {
             $user->email = (string) $data['email'];
         }
-        if (array_key_exists('phone_number', $data)) {
-            $user->phone_number = (string) $data['phone_number'];
-        }
+        
         
         // ADDED: Handle password updates specifically for the Admin Edit form
         if (!empty($data['password'])) {

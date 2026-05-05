@@ -152,7 +152,6 @@ class AuthController
             'last_name'    => $lastName,
             'email'        => $email,
             'password'     => $password,
-            'phone_number' => (string) ($data['phone_number'] ?? ''),
         ];
 
         return $response
