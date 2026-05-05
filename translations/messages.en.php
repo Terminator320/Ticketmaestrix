@@ -75,7 +75,7 @@ return [
     'cart.total'            => 'Total',
     'cart.button'           => 'Complete Purchase',
     'cart.clear'            => 'Clear Cart',
-    'cart.message'          => 'Secure checout \n Your payment information is encrypted',
+    'cart.message'          => 'Secure checkout \n Your payment information is encrypted',
 
     //Login
     'login.header'   => 'Welcome Back',

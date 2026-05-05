@@ -35,6 +35,44 @@ class CartController
         private string          $basePath,
     ) {}
 
+    /** GET /checkout — display the secure payment form. */
+    public function showCheckout(Request $request, Response $response): Response
+    {
+        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        $queryParams = $request->getQueryParams();
+        $pointsToUse = (int) ($queryParams['points_to_use'] ?? 0);
+
+        // Hydrate cart to calculate actual totals
+        $rows = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
+        $subtotal = Cart::subtotal($rows);
+
+        // Validate points selection against user balance and subtotal
+        $user = Auth::user();
+        $availablePoints = (int) ($user->points ?? 0);
+        $maxDiscountPoints = (int) floor($subtotal * 100);
+
+        if ($pointsToUse < 0) $pointsToUse = 0;
+        if ($pointsToUse > $availablePoints) $pointsToUse = $availablePoints;
+        if ($pointsToUse > $maxDiscountPoints) $pointsToUse = $maxDiscountPoints;
+
+        $discount = $pointsToUse * 0.01;
+        $total = max(0, $subtotal - $discount);
+
+        $html = $this->twig->render('home/checkout.html.twig', [
+            'base_path' => $this->basePath,
+            'points_to_use' => $pointsToUse,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total' => $total,
+            'error'     => null,
+        ]);
+        $response->getBody()->write($html);
+        return $response;
+    }
+
     /** POST /cart/add — add a ticket id to the session cart. */
     public function add(Request $request, Response $response): Response
     {
@@ -81,7 +119,7 @@ class CartController
     }
 
     /**
-     * POST /cart/checkout — convert the session cart into a real order.
+     * POST /checkout — convert the session cart into a real order.
      *
      * Login is required. Creates one orders row (status=1, paid) and one
      * order_items row per cart line, awards 10% of the total as points,
@@ -139,7 +177,7 @@ class CartController
             $orderId = (int) R::store($order);
 
             foreach ($rows as $row) {
-                $item = R::dispense('order_items');
+                $item = R::dispense('orderitem');
                 $item->quantity  = (int) $row['quantity'];
                 $item->order_id  = $orderId;
                 $item->ticket_id = (int) $row['ticket_id'];

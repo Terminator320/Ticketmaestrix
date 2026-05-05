@@ -80,7 +80,7 @@ return [
     'cart.subtotal'         => 'Sous-total',
     'cart.service'          => 'Frais de service',
     'cart.total'            => 'Total',
-    'cart.button'           => 'Finaliser l\'achat',
+    'cart.button'           => 'Passer à la caisse',
     'cart.clear'            => 'Vider le panier',
     'cart.message'          => 'Paiement sécurisé \n Vos informations sont chiffrées',
 

@@ -89,12 +89,16 @@
         {% endif %}
 
         <form action="{{ base_path }}/checkout" method="POST">
-            <div class="mb-4">
-                <label class="form-label fw-bold">Total</label>
-                <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-dollar-fill"></i></span>
-                    <input type="text" name="total" class="form-control border-start-0" placeholder="€" required>
-                </div>
+            <input type="hidden" name="points_to_use" value="{{ points_to_use }}">
+            
+            <div class="mb-4 p-3 bg-light rounded-3 border text-center">
+                <label class="form-label d-block text-muted small text-uppercase fw-bold">Amount to Pay</label>
+                <span class="display-6 fw-bold text-dark">${{ total|number_format(2) }}</span>
+                {% if discount > 0 %}
+                    <div class="text-success small mt-1">
+                        <i class="bi bi-tag-fill"></i> Includes ${{ discount|number_format(2) }} points discount
+                    </div>
+                {% endif %}
             </div>
 
             <div class="mb-4">

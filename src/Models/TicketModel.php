@@ -71,7 +71,7 @@ class TicketModel
     public function countByOrderItemsForUser(int $userId): int
     {
         $sql = 'SELECT COALESCE(SUM(oi.quantity), 0)
-                  FROM order_items oi
+                  FROM orderitem oi
                   JOIN orders o ON o.id = oi.order_id
                  WHERE o.user_id = ? AND o.status > 0';
         return (int) R::getCell($sql, [$userId]);
