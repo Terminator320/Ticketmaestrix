@@ -117,8 +117,14 @@
                         </div>
                         <div class="d-flex justify-content-between mb-4">
                             <span class="h5 fw-bold">Total</span>
-                            <span class="h5 fw-bold">${{ total|number_format(2) }}</span>
+                            <span class="h5 fw-bold" id="total-display">${{ total|number_format(2) }}</span>
                         </div>
+                        {% if subtotal != total or max_discount > 0 %}
+                        <div class="d-flex justify-content-between mb-2 small text-success" id="discount-row" style="display:none;">
+                            <span>Points discount</span>
+                            <span class="fw-bold" id="discount-amount">-$0.00</span>
+                        </div>
+                        {% endif %}
 
                         <div class="points-badge p-3 mb-4 d-flex align-items-center gap-2">
                             <i class="bi bi-award"></i>
@@ -128,8 +134,19 @@
                             </div>
                         </div>
 
+                        {% if user_points > 0 and cart is not empty %}
+                        <div class="mb-3">
+                            <label class="fw-bold small mb-1">Use Points ({{ user_points }} available)</label>
+                            <input type="number" id="points-input" name="points_to_use" min="0" max="{{ max_discount }}" value="0" class="form-control form-control-sm">
+                            <small class="text-muted"><span id="discount-preview">$0.00</span> discount applied</small>
+                        </div>
+                        {% endif %}
+
                         {# Checkout posts to /cart/checkout, which requires login. #}
-                        <form method="POST" action="{{ base_path }}/cart/checkout" class="m-0">
+                        <form method="POST" action="{{ base_path }}/cart/checkout" class="m-0" id="checkout-form">
+                            {% if user_points > 0 and cart is not empty %}
+                            <input type="hidden" id="points-hidden" name="points_to_use" value="0">
+                            {% endif %}
                             <button type="submit" class="btn btn-purple w-100 py-3 fw-bold rounded-3 mb-2">
                                 <i class="bi bi-credit-card me-2"></i> Complete Purchase
                             </button>
@@ -155,6 +172,41 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     {% if cart is not empty %}
     <script>
+        {% if user_points > 0 and max_discount > 0 %}
+        (function () {
+            var input       = document.getElementById('points-input');
+            var hidden      = document.getElementById('points-hidden');
+            var preview     = document.getElementById('discount-preview');
+            var totalDisp   = document.getElementById('total-display');
+            var discountRow = document.getElementById('discount-row');
+            var discountAmt = document.getElementById('discount-amount');
+            var baseTotal   = {{ total|number_format(2, '.', '') }};
+
+            function update() {
+                var pts = parseInt(input.value, 10) || 0;
+                if (pts < 0) pts = 0;
+                if (pts > {{ max_discount }}) pts = {{ max_discount }};
+                input.value = pts;
+                hidden.value = pts;
+
+                var discount = (pts * 0.01).toFixed(2);
+                var newTotal = (baseTotal - pts * 0.01).toFixed(2);
+
+                preview.textContent = '$' + discount;
+                totalDisp.textContent = '$' + newTotal;
+
+                if (pts > 0) {
+                    discountRow.style.display = 'flex';
+                    discountAmt.textContent = '-$' + discount;
+                } else {
+                    discountRow.style.display = 'none';
+                }
+            }
+
+            input.addEventListener('input', update);
+        }());
+        {% endif %}
+
         (function () {
             var seconds = {{ seconds_remaining }};
             var checkingOut = false;
@@ -162,7 +214,6 @@
             var expireForm   = document.getElementById('cart-expire-form');
             var checkoutForm = document.querySelector('form[action$="/cart/checkout"]');
 
-            // Freeze the redirect once the user has committed to paying.
             if (checkoutForm) {
                 checkoutForm.addEventListener('submit', function () {
                     checkingOut = true;

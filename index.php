@@ -29,6 +29,7 @@ use App\Models\OrderModel;
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\VenueModel;
+use App\Models\PointsHistoryModel;
 use App\Services\OtpService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -134,6 +135,7 @@ $container->set(CartController::class, fn() => new CartController(
     new VenueModel(),
     new OrderModel(),
     new OrderItemModel(),
+    new PointsHistoryModel(),
     $basePath,
 ));
 
@@ -149,6 +151,7 @@ $container->set(UserController::class, fn() => new UserController(
     new UserModel(),
     new TicketModel(),
     new OrderModel(),
+    new PointsHistoryModel(),
     $basePath,
 ));
 

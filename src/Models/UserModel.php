@@ -41,6 +41,7 @@ class UserModel
         $bean->phone_number = $data['phone_number'] ?? null;
         $bean->role         = $data['role'] ?? 'user';
         $bean->totp_secret  = $data['totp_secret'] ?? null;
+        $bean->points       = 0;
         R::store($bean);
         return BeanHelper::castBeanProperties($bean);
     }

@@ -52,6 +52,22 @@ class OtpService
             'secret'  => $secret,
         ];
     }
+
+    /**
+     * Generate a TOTP secret for an existing user, update their record,
+     * and return the QR code and secret.
+     */
+    public function generateForExisting(int $userId, string $label): array
+    {
+        $secret = $this->tfa->createSecret();
+        $user = $this->userModel->load($userId);
+        $user->totp_secret = $secret;
+        $this->userModel->save($user);
+        return [
+            'qr_code' => $this->tfa->getQRCodeImageAsDataUri($label, $secret),
+            'secret'  => $secret,
+        ];
+    }
     /**
      * Verify a user-supplied code against the secret stored in the database.
      */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Helpers\Auth;
 use App\Helpers\Cart;
 use App\Models\CategoryModel;
 use App\Models\EventModel;
@@ -68,19 +69,30 @@ class HomeController
      */
     public function showCart(Request $request, Response $response): Response
     {
-        // Expire stale cart before rendering so the empty-cart state shows immediately.
         Cart::checkExpiry();
 
         $cart     = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
         $subtotal = Cart::subtotal($cart);
+
+        $userId      = Auth::userId();
+        $userPoints  = 0;
+        $maxDiscount = 0;
+
+        if ($userId) {
+            $user = Auth::user();
+            $userPoints  = (int) ($user->points ?? 0);
+            $maxDiscount = (int) floor($subtotal * 100);
+        }
 
         $html = $this->twig->render('home/cart.html.twig', [
             'base_path'         => $this->basePath,
             'current_route'     => 'cart',
             'cart'              => $cart,
             'subtotal'          => $subtotal,
-            'total'             => $subtotal, // no service fee yet
+            'total'             => $subtotal,
             'points_earned'     => (int) floor($subtotal * 0.10),
+            'user_points'       => $userPoints,
+            'max_discount'      => min($userPoints, $maxDiscount),
             'seconds_remaining' => Cart::secondsRemaining(),
         ]);
 

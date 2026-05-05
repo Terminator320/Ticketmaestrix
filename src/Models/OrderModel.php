@@ -22,10 +22,12 @@ class OrderModel
     public function create(float $totalPrice, int $userId): void
     {
         $bean = R::dispense('orders');
-        $bean->total_price = $totalPrice;
-        $bean->status      = 0;
-        $bean->order_time  = date('Y-m-d H:i:s');
-        $bean->user_id     = $userId;
+        $bean->total_price   = $totalPrice;
+        $bean->status        = 0;
+        $bean->order_time    = date('Y-m-d H:i:s');
+        $bean->user_id       = $userId;
+        $bean->points_earned = 0;
+        $bean->points_spent  = 0;
         R::store($bean);
     }
 
