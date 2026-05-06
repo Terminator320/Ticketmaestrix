@@ -11,16 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+       - name: List cPanel Git Repositories (debug)
+         run: |
+           echo "=== Registered Git Repositories ==="
+           curl -sk \
+             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
+             "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/retrieve" \
+             | python3 -m json.tool || echo "(could not parse JSON)"
+           echo "==================================="
+           echo "Repository path: $HOME/repositories/Ticketmaestrix"
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.CPANEL_HOST }}
-          username: ${{ secrets.CPANEL_USER }}
-          key: ${{ secrets.CPANEL_SSH_DEPLOY_KEY }}
-          port: ${{ secrets.CPANEL_SSH_PORT }} # optional, defaults to 22
-          script: |
-            cd ~/repositories/Ticketmaestrix
-            git pull origin main
+      - name: Pull from remote
+        run: |
+           RESPONSE=$(curl -sk \
+             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
+             "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/update" \
+             --data-urlencode "repository_root=$HOME/repositories/Ticketmaestrix")
+
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('status', 0))" 2>/dev/null || echo "0")
+          [ "$STATUS" = "1" ] || { echo "Git pull failed"; exit 1; }
+

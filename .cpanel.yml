@@ -1,8 +1,8 @@
 ---
 deployment:
   tasks:
-    # Pull latest changes (cPanel Git deployment)
-    - cd $HOME/public_html && git pull
+    # Deploy files from repo to public_html via rsync
+    - /usr/bin/rsync -av --delete --exclude='.git/' --exclude='.github/' --exclude='.gitignore' --exclude='.gitattributes' --exclude='.cpanel.yml' --exclude='.env' --exclude='.env.*' --exclude='node_modules/' --exclude='package.json' --exclude='package-lock.json' --exclude='update.bat' --exclude='README.md' --exclude='LICENSE' --exclude='.well-known/' --exclude='var/' ./ $HOME/public_html/
 
     # Install composer dependencies for production
     - cd $HOME/public_html && php /usr/local/bin/composer install --no-dev --optimize-autoloader
