@@ -11,22 +11,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-       - name: List cPanel Git Repositories (debug)
-         run: |
-           echo "=== Registered Git Repositories ==="
-           curl -sk \
-             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
-             "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/retrieve" \
-             | python3 -m json.tool || echo "(could not parse JSON)"
-           echo "==================================="
-           echo "Repository path: $HOME/repositories/Ticketmaestrix"
+      - name: List cPanel Git Repositories (debug)
+        run: |
+          echo "=== Registered Git Repositories ==="
+          curl -sk \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
+            "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/retrieve" \
+            | python3 -m json.tool || echo "(could not parse JSON)"
+          echo "==================================="
 
       - name: Pull from remote
         run: |
-           RESPONSE=$(curl -sk \
-             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
-             "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/update" \
-             --data-urlencode "repository_root=$HOME/repositories/Ticketmaestrix")
+          RESPONSE=$(curl -sk \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
+            "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/update" \
+            --data-urlencode "repository_root=/home/${{ secrets.CPANEL_USER }}/repositories/Ticketmaestrix")
 
           echo "$RESPONSE"
           STATUS=$(echo "$RESPONSE" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('status', 0))" 2>/dev/null || echo "0")
