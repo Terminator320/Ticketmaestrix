@@ -10,3 +10,6 @@ node_modules/
 var/app.log
 
 vendor/
+
+# Deploy script (contains server-specific data)
+deploy.sh
